@@ -1,2 +1,10 @@
-sanic
-sanic-ext
+aiofiles==0.8.0
+greenlet==1.1.2
+httptools==0.4.0
+multidict==5.2.0
+PyYAML==6.0
+sanic==21.12.1
+sanic-ext==22.1.2
+sanic-routing==0.7.2
+SQLAlchemy==1.4.32
+websockets==10.2

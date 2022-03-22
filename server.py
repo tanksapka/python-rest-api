@@ -1,7 +1,7 @@
 from sanic import Sanic
 from sanic.response import text, json, HTTPResponse
 
-app = Sanic("MyHelloWorldApp")
+app = Sanic("MembershipManagementSystem")
 
 
 @app.get("/")
