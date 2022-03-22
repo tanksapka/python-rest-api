@@ -1,5 +1,5 @@
 from sqlalchemy import INTEGER, NCHAR, NVARCHAR, DATE, DATETIME, TEXT, Column, CheckConstraint, UniqueConstraint,\
-    PrimaryKeyConstraint
+    PrimaryKeyConstraint, ForeignKey
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.engine import create_engine
 
@@ -17,13 +17,31 @@ class BaseModel(Base):
     PrimaryKeyConstraint(id, name=f'pk_{__tablename__}')
 
 
-class Gender(BaseModel):
-    __tablename__ = "gender"
+class BaseMapModel(BaseModel):
+    __abstract__ = True
     name = Column(NVARCHAR(255), nullable=False)
-    description = Column(NVARCHAR(255), nullable=True)
-    valid_flag = Column(NCHAR(1), nullable=False)
-    UniqueConstraint('description', name=f'uq_{__tablename__}')
-    CheckConstraint("valid_flag in ('Y', 'N')", name=f'chk_{valid_flag.name}')
+    description = Column(NVARCHAR(255), unique=True, nullable=True)
+    valid_flag = Column(NCHAR(1), CheckConstraint("valid_flag in ('Y', 'N')", name=f'chk_valid_flag'), nullable=False)
+
+
+class Gender(BaseMapModel):
+    __tablename__ = "gender"
+
+
+class MembershipFeeCategory(BaseMapModel):
+    __tablename__ = "membership_fee_category"
+
+
+class AddressType(BaseMapModel):
+    __tablename__ = "address_type"
+
+
+class PhoneType(BaseMapModel):
+    __tablename__ = "phone_type"
+
+
+class EmailType(BaseMapModel):
+    __tablename__ = "email_type"
 
 
 class Person(BaseModel):
@@ -33,10 +51,69 @@ class Person(BaseModel):
     name = Column(NVARCHAR(255), nullable=False)
     birthdate = Column(DATE(), nullable=True)
     mother_name = Column(NVARCHAR(255), nullable=True)
-    gender_id = Column(NCHAR(36), nullable=True)
+    gender_id = Column(NCHAR(36), ForeignKey('gender.id', name='fk_person_gender_id'), nullable=True)
     identity_card_number = Column(NVARCHAR(50), nullable=True)
-    membership_fee_category_id = Column(NCHAR(36), nullable=False)
+    membership_fee_category_id = Column(
+        NCHAR(36), ForeignKey('membership_fee_category.id', name='fk_person_membership_fee_category_id'), nullable=False
+    )
     notes = Column(TEXT(), nullable=True)
+
+
+class Organization(BaseModel):
+    __tablename__ = 'organization'
+    organization_parent_id = Column(
+        NCHAR(36), ForeignKey('organization.id', name='fk_organization_organization_id'), nullable=False
+    )
+    name = Column(NVARCHAR(255), nullable=False)
+    description = Column(NVARCHAR(255), unique=True, nullable=True)
+    accepts_members_flag = Column(
+        NCHAR(1), CheckConstraint("accepts_members_flag in ('Y', 'N')", name=f'chk_accepts_members_flag'),
+        nullable=False
+    )
+    establishment_date = Column(DATE(), nullable=False)
+    termination_date = Column(DATE(), nullable=True)
+    notes = Column(TEXT(), nullable=True)
+
+
+class Address(BaseModel):
+    __tablename__ = 'address'
+    person_id = Column(NCHAR(36), ForeignKey('person.id', name='fk_address_person_id'), nullable=False)
+    organization_id = Column(
+        NCHAR(36), ForeignKey('organization.id', name='fk_address_organization_id'), nullable=False
+    )
+    address_type_id = Column(
+        NCHAR(36), ForeignKey('address_type.id', name='fk_address_address_type_id'), nullable=False
+    )
+    zip = Column(NVARCHAR(255), nullable=False)
+    city = Column(NVARCHAR(255), nullable=False)
+    address_1 = Column(NVARCHAR(255), nullable=False)
+    address_2 = Column(NVARCHAR(255), nullable=True)
+
+
+class Phone(BaseModel):
+    __tablename__ = "phone"
+    person_id = Column(NCHAR(36), ForeignKey('person.id', name='fk_phone_person_id'), nullable=False)
+    organization_id = Column(NCHAR(36), ForeignKey('organization.id', name='fk_phone_organization_id'), nullable=False)
+    phone_type_id = Column(NCHAR(36), ForeignKey('phone_type.id', name='fk_phone_phone_type_id'), nullable=False)
+    phone_number = Column(NVARCHAR(255), nullable=False)
+    phone_extension = Column(NVARCHAR(255), nullable=True)
+    messenger = Column(NCHAR(1), CheckConstraint("messenger in ('Y', 'N')", name=f'chk_messenger'), nullable=False)
+    skype = Column(NCHAR(1), CheckConstraint("skype in ('Y', 'N')", name=f'chk_skype'), nullable=False)
+    viber = Column(NCHAR(1), CheckConstraint("viber in ('Y', 'N')", name=f'chk_viber'), nullable=False)
+    whatsapp = Column(NCHAR(1), CheckConstraint("whatsapp in ('Y', 'N')", name=f'chk_whatsapp'), nullable=False)
+
+
+class Email(BaseModel):
+    __tablename__ = "email"
+    person_id = Column(NCHAR(36), ForeignKey('person.id', name='fk_email_person_id'), nullable=False)
+    organization_id = Column(NCHAR(36), ForeignKey('organization.id', name='fk_email_organization_id'), nullable=False)
+    email_type_id = Column(NCHAR(36), ForeignKey('email_type.id', name='fk_email_email_type_id'), nullable=False)
+    phone_number = Column(NVARCHAR(255), nullable=False)
+    phone_extension = Column(NVARCHAR(255), nullable=True)
+    messenger = Column(NCHAR(1), CheckConstraint("messenger in ('Y', 'N')", name=f'chk_messenger'), nullable=False)
+    skype = Column(NCHAR(1), CheckConstraint("skype in ('Y', 'N')", name=f'chk_skype'), nullable=False)
+    viber = Column(NCHAR(1), CheckConstraint("viber in ('Y', 'N')", name=f'chk_viber'), nullable=False)
+    whatsapp = Column(NCHAR(1), CheckConstraint("whatsapp in ('Y', 'N')", name=f'chk_whatsapp'), nullable=False)
 
 
 if __name__ == '__main__':
