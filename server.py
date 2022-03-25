@@ -1,11 +1,11 @@
-import datetime
 from contextvars import ContextVar
 from models.models import Gender
 from sanic import Sanic
+from sanic.request import Request
 from sanic.response import text, json, HTTPResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import selectinload, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 app = Sanic("MembershipManagementSystem")
 bind = create_async_engine("sqlite+aiosqlite:///dev.db", echo=True)
@@ -26,26 +26,34 @@ async def close_session(request, response):
 
 
 @app.post("/gender")
-async def create_gender(request) -> HTTPResponse:
+async def create_gender(request: Request) -> HTTPResponse:
+    """
+    Inserts the provided JSON payload to corresponding table.
+
+    :param request: `Request` object
+    :return: JSON with id and timestamp
+    """
     session = request.ctx.session
     async with session.begin():
-        gender = Gender(id='3', created_on=datetime.date.today(), created_by="me", name="male1", description="test", valid_flag='Y')
+        gender = Gender(**request.json)
         session.add_all([gender])
-    return json(gender)
+    json_data = gender.to_dict()
+    print(json_data)
+    return json(json_data, default=str)
 
 
-@app.get("/gender/<pk:int>")
+@app.get("/gender/<pk:str>")
 async def get_gender(request, pk) -> HTTPResponse:
     session = request.ctx.session
     async with session.begin():
-        stmt = select(Gender).where(Gender.id == pk).options(selectinload(Gender.cars))
+        stmt = select(Gender).where(Gender.id == pk)
         result = await session.execute(stmt)
         gender = result.scalar()
 
     if not gender:
         return json(dict())
 
-    return json(gender.to_dict())
+    return json(gender.to_dict(), default=str)
 
 
 @app.get("/")

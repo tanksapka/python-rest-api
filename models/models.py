@@ -1,7 +1,9 @@
-from sqlalchemy import INTEGER, NCHAR, NVARCHAR, DATE, DATETIME, TEXT, Column, CheckConstraint, UniqueConstraint,\
-    PrimaryKeyConstraint, ForeignKey
+import datetime
+from sqlalchemy import INTEGER, NCHAR, NVARCHAR, DATE, DATETIME, TEXT, Column, CheckConstraint, ForeignKey
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.engine import create_engine
+from typing import Any, Dict
+from uuid import uuid4
 
 Base = declarative_base()
 sql_url = "sqlite:///:memory:"
@@ -10,17 +12,18 @@ db_engine = create_engine(sql_url, echo=True)
 
 class BaseModel(Base):
     __abstract__ = True
-    __tablename__ = 'base'
-    id = Column(NCHAR(36), primary_key=True)
-    created_on = Column(DATETIME(), nullable=False)
+    id = Column(NCHAR(36), primary_key=True, default=str(uuid4()))
+    created_on = Column(DATETIME(), nullable=False, default=datetime.datetime.now())
     created_by = Column(NVARCHAR(50), nullable=False)
-    PrimaryKeyConstraint(id, name=f'pk_{__tablename__}')
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {col.name: getattr(self, col.name) for col in self.__table__.columns}
 
 
 class BaseMapModel(BaseModel):
     __abstract__ = True
-    name = Column(NVARCHAR(255), nullable=False)
-    description = Column(NVARCHAR(255), unique=True, nullable=True)
+    name = Column(NVARCHAR(255), unique=True, nullable=False)
+    description = Column(NVARCHAR(255), nullable=True)
     valid_flag = Column(NCHAR(1), CheckConstraint("valid_flag in ('Y', 'N')", name=f'chk_valid_flag'), nullable=False)
 
 
