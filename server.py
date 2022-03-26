@@ -1,9 +1,10 @@
 from contextvars import ContextVar
-from models.models import Gender
+from routes.maps import (
+    bp_address_type, bp_address_types, bp_email_type, bp_email_types, bp_gender, bp_genders, bp_membership_fee_category,
+    bp_membership_fee_categories, bp_phone_type, bp_phone_types
+)
 from sanic import Sanic
 from sanic.request import Request
-from sanic.response import text, json, HTTPResponse
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -13,59 +14,25 @@ _base_model_session_ctx = ContextVar("session")
 
 
 @app.middleware("request")
-async def inject_session(request):
+async def inject_session(request: Request) -> None:
     request.ctx.session = sessionmaker(bind, AsyncSession, expire_on_commit=False)()
     request.ctx.session_ctx_token = _base_model_session_ctx.set(request.ctx.session)
 
 
 @app.middleware("response")
-async def close_session(request, response):
+async def close_session(request: Request, response) -> None:
     if hasattr(request.ctx, "session_ctx_token"):
         _base_model_session_ctx.reset(request.ctx.session_ctx_token)
         await request.ctx.session.close()
 
 
-@app.post("/gender")
-async def create_gender(request: Request) -> HTTPResponse:
-    """
-    Inserts the provided JSON payload to corresponding table.
-
-    :param request: `Request` object
-    :return: JSON with id and timestamp
-    """
-    session = request.ctx.session
-    async with session.begin():
-        gender = Gender(**request.json)
-        session.add_all([gender])
-    json_data = gender.to_dict()
-    print(json_data)
-    return json(json_data, default=str)
-
-
-@app.get("/gender/<pk:str>")
-async def get_gender(request, pk) -> HTTPResponse:
-    session = request.ctx.session
-    async with session.begin():
-        stmt = select(Gender).where(Gender.id == pk)
-        result = await session.execute(stmt)
-        gender = result.scalar()
-
-    if not gender:
-        return json(dict())
-
-    return json(gender.to_dict(), default=str)
-
-
-@app.get("/")
-async def hello_world(request) -> HTTPResponse:
-    return text("Hello, world.")
-
-
-@app.get("/test")
-async def sample_data(request) -> HTTPResponse:
-    return json({
-        'data1': 1,
-        'data2': 2,
-        'data3': 3,
-        'data4': 4,
-    })
+app.blueprint(bp_gender)
+app.blueprint(bp_genders)
+app.blueprint(bp_membership_fee_category)
+app.blueprint(bp_membership_fee_categories)
+app.blueprint(bp_address_type)
+app.blueprint(bp_address_types)
+app.blueprint(bp_phone_type)
+app.blueprint(bp_phone_types)
+app.blueprint(bp_email_type)
+app.blueprint(bp_email_types)
