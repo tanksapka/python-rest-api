@@ -274,32 +274,22 @@ class EmailTypesView(GendersView):
         return await super().post(request)
 
 
-bp_gender = Blueprint("gender", url_prefix="/genders/<pk:str>")
-bp_gender.add_route(GenderView.as_view(), '/')
+bp_gender = Blueprint("genders", url_prefix="/genders/")
+bp_gender.add_route(GenderView.as_view(), '/<pk:str>')
+bp_gender.add_route(GendersView.as_view(), '/')
 
-bp_genders = Blueprint("genders", url_prefix="/genders/")
-bp_genders.add_route(GendersView.as_view(), '/')
+bp_membership_fee_category = Blueprint("membership_fee_categories", url_prefix="/membership-fee-categories/")
+bp_membership_fee_category.add_route(MembershipFeeCategoryView.as_view(), "/<pk:str>")
+bp_membership_fee_category.add_route(MembershipFeeCategoriesView.as_view(), "/")
 
-bp_membership_fee_category = Blueprint("membership_fee_category", url_prefix="/membership-fee-categories/<pk:str>")
-bp_membership_fee_category.add_route(MembershipFeeCategoryView.as_view(), "/")
+bp_address_type = Blueprint("address_types", url_prefix="/address-types/")
+bp_address_type.add_route(AddressTypeView.as_view(), "/<pk:str>")
+bp_address_type.add_route(AddressTypesView.as_view(), "/")
 
-bp_membership_fee_categories = Blueprint("membership_fee_categories", url_prefix="/membership-fee-categories/")
-bp_membership_fee_categories.add_route(MembershipFeeCategoriesView.as_view(), "/")
+bp_phone_type = Blueprint("phone_types", url_prefix="/phone-types/")
+bp_phone_type.add_route(PhoneTypeView.as_view(), "/<pk:str>")
+bp_phone_type.add_route(PhoneTypesView.as_view(), "/")
 
-bp_address_type = Blueprint("address_type", url_prefix="/address-types/<pk:str>")
-bp_address_type.add_route(AddressTypeView.as_view(), "/")
-
-bp_address_types = Blueprint("address_types", url_prefix="/address-types/")
-bp_address_types.add_route(AddressTypesView.as_view(), "/")
-
-bp_phone_type = Blueprint("phone_type", url_prefix="/phone-types/<pk:str>")
-bp_phone_type.add_route(PhoneTypeView.as_view(), "/")
-
-bp_phone_types = Blueprint("phone_types", url_prefix="/phone-types/")
-bp_phone_types.add_route(PhoneTypesView.as_view(), "/")
-
-bp_email_type = Blueprint("email_type", url_prefix="/email-types/<pk:str>")
-bp_email_type.add_route(EmailTypeView.as_view(), "/")
-
-bp_email_types = Blueprint("email_types", url_prefix="/email-types/")
-bp_email_types.add_route(EmailTypesView.as_view(), "/")
+bp_email_type = Blueprint("email_types", url_prefix="/email-types/")
+bp_email_type.add_route(EmailTypeView.as_view(), "/<pk:str>")
+bp_email_type.add_route(EmailTypesView.as_view(), "/")

@@ -1,8 +1,9 @@
 from contextvars import ContextVar
-from routes.maps import (
-    bp_address_type, bp_address_types, bp_email_type, bp_email_types, bp_gender, bp_genders, bp_membership_fee_category,
-    bp_membership_fee_categories, bp_phone_type, bp_phone_types
-)
+from routes.addresses import bp_address
+from routes.emails import bp_email
+from routes.maps import bp_address_type, bp_email_type, bp_gender, bp_membership_fee_category, bp_phone_type
+from routes.organizations import bp_organization
+from routes.people import bp_person
 from sanic import Sanic
 from sanic.request import Request
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -27,12 +28,11 @@ async def close_session(request: Request, response) -> None:
 
 
 app.blueprint(bp_gender)
-app.blueprint(bp_genders)
 app.blueprint(bp_membership_fee_category)
-app.blueprint(bp_membership_fee_categories)
 app.blueprint(bp_address_type)
-app.blueprint(bp_address_types)
 app.blueprint(bp_phone_type)
-app.blueprint(bp_phone_types)
 app.blueprint(bp_email_type)
-app.blueprint(bp_email_types)
+app.blueprint(bp_person)
+app.blueprint(bp_organization)
+app.blueprint(bp_address)
+app.blueprint(bp_email)
