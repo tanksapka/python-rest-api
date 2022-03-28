@@ -82,7 +82,6 @@ class GendersView(HTTPMethodView):
         :return: JSON with id and timestamp
         """
         session: AsyncSession = request.ctx.session
-        print(request.json)
         async with session.begin():
             gender: GenderView.DBObject = self.DBObject(**request.json)
             session.add_all([gender])

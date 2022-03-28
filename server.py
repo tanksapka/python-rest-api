@@ -2,8 +2,10 @@ from contextvars import ContextVar
 from routes.addresses import bp_address
 from routes.emails import bp_email
 from routes.maps import bp_address_type, bp_email_type, bp_gender, bp_membership_fee_category, bp_phone_type
+from routes.memberships import bp_memberships
 from routes.organizations import bp_organization
 from routes.people import bp_person
+from routes.phones import bp_phone
 from sanic import Sanic
 from sanic.request import Request
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -36,3 +38,5 @@ app.blueprint(bp_person)
 app.blueprint(bp_organization)
 app.blueprint(bp_address)
 app.blueprint(bp_email)
+app.blueprint(bp_phone)
+app.blueprint(bp_memberships)

@@ -84,7 +84,6 @@ class OrganizationsView(HTTPMethodView):
         :return: JSON with id and timestamp
         """
         session: AsyncSession = request.ctx.session
-        print(request.json)
         async with session.begin():
             organization: Organization = Organization(**request.json)
             session.add_all([organization])

@@ -84,7 +84,6 @@ class EmailsView(HTTPMethodView):
         :return: JSON with id and timestamp
         """
         session: AsyncSession = request.ctx.session
-        print(request.json)
         async with session.begin():
             email: Email = Email(**request.json)
             session.add_all([email])

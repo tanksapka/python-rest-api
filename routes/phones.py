@@ -1,4 +1,4 @@
-from models.models import Address
+from models.models import Phone
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
@@ -11,69 +11,69 @@ from sqlalchemy.sql.dml import Update
 from typing import Any, Dict, List
 
 
-class AddressView(HTTPMethodView):
+class PhoneView(HTTPMethodView):
 
     @staticmethod
     async def get(request: Request, pk: str) -> HTTPResponse:
         """
-        Gets address data based on provided id (pk).
+        Gets phone data based on provided id (pk).
 
         :param request: `Request` object
-        :param pk: primary key of address table
+        :param pk: primary key of phone table
         :return: JSON object with results
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            stmt: Select = select(Address).where(Address.id == pk)
+            stmt: Select = select(Phone).where(Phone.id == pk)
             result: Result = await session.execute(stmt)
-            address: Address = result.scalar()
+            phone: Phone = result.scalar()
 
-        if not address:
+        if not phone:
             return json(dict())
 
-        return json(address.to_dict(), default=str)
+        return json(phone.to_dict(), default=str)
 
     @staticmethod
     async def patch(request: Request, pk: str) -> HTTPResponse:
         """
-        Alter specific address entry in database.
+        Alter specific phone entry in database.
 
         :param request: `Request` object
-        :param pk: primary key of address table
+        :param pk: primary key of phone table
         :return: JSON object with results
         """
         session: AsyncSession = request.ctx.session
         payload: Dict[str, Any] = {k: v for k, v in request.json.items() if k not in ['id', 'created_on', 'created_by']}
         async with session.begin():
-            stmt: Update = update(Address).where(Address.id == pk).values(**payload)
+            stmt: Update = update(Phone).where(Phone.id == pk).values(**payload)
             await session.execute(stmt)
         async with session.begin():
-            stmt: Select = select(Address).where(Address.id == pk)
+            stmt: Select = select(Phone).where(Phone.id == pk)
             result: Result = await session.execute(stmt)
-            address: Address = result.scalar()
-        return json(address.to_dict(), default=str)
+            phone: Phone = result.scalar()
+        return json(phone.to_dict(), default=str)
 
 
-class AddressesView(HTTPMethodView):
+class PhonesView(HTTPMethodView):
 
     @staticmethod
     async def get(request: Request) -> HTTPResponse:
         """
-        Gets address collection from database.
+        Gets phone collection from database.
 
         :param request: `Request` object
         :return: JSON object with results
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            stmt: Select = select(Address)
+            stmt: Select = select(Phone)
             results: Result = await session.execute(stmt)
-            addresses: List[Address] = results.scalars().fetchall()
+            phones: List[Phone] = results.scalars().fetchall()
 
-        if not addresses:
+        if not phones:
             return json(dict())
 
-        return json([row.to_dict() for row in addresses], default=str)
+        return json([row.to_dict() for row in phones], default=str)
 
     @staticmethod
     async def post(request: Request) -> HTTPResponse:
@@ -85,12 +85,12 @@ class AddressesView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            address: Address = Address(**request.json)
-            session.add_all([address])
-        json_data: Dict[str, Any] = address.to_dict()
+            phone: Phone = Phone(**request.json)
+            session.add_all([phone])
+        json_data: Dict[str, Any] = phone.to_dict()
         return json(json_data, default=str)
 
 
-bp_address = Blueprint("addresses", url_prefix="/addresses/")
-bp_address.add_route(AddressView.as_view(), '/<pk:str>')
-bp_address.add_route(AddressesView.as_view(), '/')
+bp_phone = Blueprint("phones", url_prefix="/phones/")
+bp_phone.add_route(PhoneView.as_view(), '/<pk:str>')
+bp_phone.add_route(PhonesView.as_view(), '/')

@@ -1,10 +1,12 @@
-from models.models import Person
+from models.models import (
+    Address, AddressType, Email, EmailType, Gender, MembershipFeeCategory, Person, Phone, PhoneType
+)
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
 from sanic.views import HTTPMethodView
 from sqlalchemy import select, update
-from sqlalchemy.engine import Result
+from sqlalchemy.engine import Result, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
@@ -24,14 +26,74 @@ class PersonView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            stmt: Select = select(Person).where(Person.id == pk)
-            result: Result = await session.execute(stmt)
-            person: Person = result.scalar()
+            person_stmt: Select = select(
+                Person.id,
+                Person.registration_number,
+                Person.membership_id,
+                Person.name.label('person_name'),
+                Person.birthdate,
+                Person.mother_name,
+                Person.gender_id,
+                Gender.name.label('gender_name'),
+                Person.identity_card_number,
+                Person.membership_fee_category_id,
+                MembershipFeeCategory.name.label('membership_fee_category_name'),
+                Person.notes,
+            ).join(Gender).join(MembershipFeeCategory).where(Person.id == pk)
+            person_result: Result = await session.execute(person_stmt)
+            person: Row = person_result.first()
+
+            address_stmt: Select = select(
+                Address.id,
+                Address.person_id,
+                Address.address_type_id,
+                AddressType.name.label('address_type_name'),
+                Address.zip,
+                Address.city,
+                Address.address_1,
+                Address.address_2,
+            ).join(AddressType).where(Address.person_id == pk)
+            address_result: Result = await session.execute(address_stmt)
+
+            email_stmt: Select = select(
+                Email.id,
+                Email.person_id,
+                Email.email_type_id,
+                EmailType.name.label('email_type_name'),
+                Email.email,
+                Email.messenger,
+                Email.skype,
+            ).join(EmailType).where(Email.person_id == pk)
+            email_result: Result = await session.execute(email_stmt)
+
+            phone_stmt: Select = select(
+                Phone.id,
+                Phone.person_id,
+                Phone.phone_type_id,
+                PhoneType.name.label('phone_type_name'),
+                Phone.phone_number,
+                Phone.phone_extension,
+                Phone.messenger,
+                Phone.skype,
+                Phone.viber,
+                Phone.whatsapp,
+            ).join(PhoneType).where(Phone.person_id == pk)
+            phone_result: Result = await session.execute(phone_stmt)
 
         if not person:
-            return json(dict())
+            return json({
+                "person": dict(),
+                "address": list(),
+                "email": list(),
+                "phone": list(),
+            })
 
-        return json(person.to_dict(), default=str)
+        return json({
+            "person": dict(person),
+            "address": tuple(map(dict, address_result)),
+            "email": tuple(map(dict, email_result)),
+            "phone": tuple(map(dict, phone_result)),
+        }, default=str)
 
     @staticmethod
     async def patch(request: Request, pk: str) -> HTTPResponse:
@@ -84,7 +146,6 @@ class PeopleView(HTTPMethodView):
         :return: JSON with id and timestamp
         """
         session: AsyncSession = request.ctx.session
-        print(request.json)
         async with session.begin():
             person: Person = Person(**request.json)
             session.add_all([person])
