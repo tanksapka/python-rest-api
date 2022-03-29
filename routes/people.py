@@ -1,3 +1,4 @@
+import datetime
 from models.models import (
     Address, AddressType, Email, EmailType, Gender, MembershipFeeCategory, Person, Phone, PhoneType
 )
@@ -10,7 +11,116 @@ from sqlalchemy.engine import Result, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, TypedDict
+
+
+class PersonDataType(TypedDict):
+    id: str
+    registration_number: int
+    membership_id: str
+    person_name: str
+    birthdate: datetime.date
+    mother_name: str
+    gender_id: str
+    gender_name: str
+    identity_card_number: str
+    membership_fee_category_id: str
+    membership_fee_category_name: str
+    notes: Optional[str]
+
+
+class AddressDataType(TypedDict):
+    id: str
+    person_id: str
+    address_type_id: str
+    address_type_name: str
+    zip: str
+    city: str
+    address_1: str
+    address_2: Optional[str]
+
+
+class EmailDataType(TypedDict):
+    id: str
+    person_id: str
+    email_type_id: str
+    email_type_name: str
+    email: str
+    messenger: str
+    skype: str
+
+
+class PhoneDataType(TypedDict):
+    id: str
+    person_id: str
+    phone_type_id: str
+    phone_type_name: str
+    phone: str
+    phone_extension: Optional[str]
+    messenger: str
+    skype: str
+    viber: str
+    whatsapp: str
+
+
+class PersonResultType(TypedDict):
+    person: PersonDataType
+    address: List[AddressDataType]
+    email: List[EmailDataType]
+    phone: List[PhoneDataType]
+
+
+query_person: Select = select(
+    Person.id,
+    Person.registration_number,
+    Person.membership_id,
+    Person.name.label('person_name'),
+    Person.birthdate,
+    Person.mother_name,
+    Person.gender_id,
+    Gender.name.label('gender_name'),
+    Person.identity_card_number,
+    Person.membership_fee_category_id,
+    MembershipFeeCategory.name.label('membership_fee_category_name'),
+    Person.notes,
+).join(Gender).join(MembershipFeeCategory)
+
+
+query_address: Select = select(
+    Address.id,
+    Address.person_id,
+    Address.address_type_id,
+    AddressType.name.label('address_type_name'),
+    Address.zip,
+    Address.city,
+    Address.address_1,
+    Address.address_2,
+).join(AddressType)
+
+
+query_email: Select = select(
+    Email.id,
+    Email.person_id,
+    Email.email_type_id,
+    EmailType.name.label('email_type_name'),
+    Email.email,
+    Email.messenger,
+    Email.skype,
+).join(EmailType)
+
+
+query_phone: Select = select(
+    Phone.id,
+    Phone.person_id,
+    Phone.phone_type_id,
+    PhoneType.name.label('phone_type_name'),
+    Phone.phone_number,
+    Phone.phone_extension,
+    Phone.messenger,
+    Phone.skype,
+    Phone.viber,
+    Phone.whatsapp,
+).join(PhoneType)
 
 
 class PersonView(HTTPMethodView):
@@ -26,58 +136,17 @@ class PersonView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            person_stmt: Select = select(
-                Person.id,
-                Person.registration_number,
-                Person.membership_id,
-                Person.name.label('person_name'),
-                Person.birthdate,
-                Person.mother_name,
-                Person.gender_id,
-                Gender.name.label('gender_name'),
-                Person.identity_card_number,
-                Person.membership_fee_category_id,
-                MembershipFeeCategory.name.label('membership_fee_category_name'),
-                Person.notes,
-            ).join(Gender).join(MembershipFeeCategory).where(Person.id == pk)
+            person_stmt: Select = query_person.where(Person.id == pk)
             person_result: Result = await session.execute(person_stmt)
             person: Row = person_result.first()
 
-            address_stmt: Select = select(
-                Address.id,
-                Address.person_id,
-                Address.address_type_id,
-                AddressType.name.label('address_type_name'),
-                Address.zip,
-                Address.city,
-                Address.address_1,
-                Address.address_2,
-            ).join(AddressType).where(Address.person_id == pk)
+            address_stmt: Select = query_address.where(Address.person_id == pk)
             address_result: Result = await session.execute(address_stmt)
 
-            email_stmt: Select = select(
-                Email.id,
-                Email.person_id,
-                Email.email_type_id,
-                EmailType.name.label('email_type_name'),
-                Email.email,
-                Email.messenger,
-                Email.skype,
-            ).join(EmailType).where(Email.person_id == pk)
+            email_stmt: Select = query_email.where(Email.person_id == pk)
             email_result: Result = await session.execute(email_stmt)
 
-            phone_stmt: Select = select(
-                Phone.id,
-                Phone.person_id,
-                Phone.phone_type_id,
-                PhoneType.name.label('phone_type_name'),
-                Phone.phone_number,
-                Phone.phone_extension,
-                Phone.messenger,
-                Phone.skype,
-                Phone.viber,
-                Phone.whatsapp,
-            ).join(PhoneType).where(Phone.person_id == pk)
+            phone_stmt: Select = query_phone.where(Phone.person_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
         if not person:
@@ -88,12 +157,14 @@ class PersonView(HTTPMethodView):
                 "phone": list(),
             })
 
-        return json({
+        result_dict: PersonResultType = {
             "person": dict(person),
-            "address": tuple(map(dict, address_result)),
-            "email": tuple(map(dict, email_result)),
-            "phone": tuple(map(dict, phone_result)),
-        }, default=str)
+            "address": list(map(dict, address_result)),
+            "email": list(map(dict, email_result)),
+            "phone": list(map(dict, phone_result)),
+        }
+
+        return json(result_dict, default=str)
 
     @staticmethod
     async def patch(request: Request, pk: str) -> HTTPResponse:
@@ -105,15 +176,40 @@ class PersonView(HTTPMethodView):
         :return: JSON object with results
         """
         session: AsyncSession = request.ctx.session
-        payload: Dict[str, Any] = {k: v for k, v in request.json.items() if k not in ['id', 'created_on', 'created_by']}
+        payload: PersonResultType = request.json
         async with session.begin():
-            stmt: Update = update(Person).where(Person.id == pk).values(**payload)
-            await session.execute(stmt)
+            person_stmt: Update = update(Person).where(Person.id == pk).values(**payload['person'])
+            await session.execute(person_stmt)
         async with session.begin():
-            stmt: Select = select(Person).where(Person.id == pk)
-            result: Result = await session.execute(stmt)
-            person: Person = result.scalar()
-        return json(person.to_dict(), default=str)
+            person_stmt: Select = query_person.where(Person.id == pk)
+            person_result: Result = await session.execute(person_stmt)
+            person: Row = person_result.first()
+
+            address_stmt: Select = query_address.where(Address.person_id == pk)
+            address_result: Result = await session.execute(address_stmt)
+
+            email_stmt: Select = query_email.where(Email.person_id == pk)
+            email_result: Result = await session.execute(email_stmt)
+
+            phone_stmt: Select = query_phone.where(Phone.person_id == pk)
+            phone_result: Result = await session.execute(phone_stmt)
+
+        if not person:
+            return json({
+                "person": dict(),
+                "address": list(),
+                "email": list(),
+                "phone": list(),
+            })
+
+        result_dict: PersonResultType = {
+            "person": dict(person),
+            "address": list(map(dict, address_result)),
+            "email": list(map(dict, email_result)),
+            "phone": list(map(dict, phone_result)),
+        }
+
+        return json(result_dict, default=str)
 
 
 class PeopleView(HTTPMethodView):
@@ -128,14 +224,8 @@ class PeopleView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            stmt: Select = select(Person)
-            results: Result = await session.execute(stmt)
-            people: List[Person] = results.scalars().fetchall()
-
-        if not people:
-            return json(dict())
-
-        return json([row.to_dict() for row in people], default=str)
+            results: Result = await session.execute(query_person)
+        return json(list(map(dict, results)), default=str)
 
     @staticmethod
     async def post(request: Request) -> HTTPResponse:
