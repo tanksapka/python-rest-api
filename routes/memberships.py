@@ -1,14 +1,27 @@
-from models.models import Membership
+from models.models import Membership, Organization, Person
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
 from sanic.views import HTTPMethodView
 from sqlalchemy import select, update
-from sqlalchemy.engine import Result
+from sqlalchemy.engine import Result, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import Any, Dict, List
+from typing import Any, Dict
+
+
+query_membership: Select = select(
+    Membership.id,
+    Membership.person_id,
+    Person.name.label('person_name'),
+    Membership.organization_id,
+    Organization.name.label('organization_name'),
+    Membership.active_flag,
+    Membership.inactivity_status_id,
+    Membership.event_date,
+    Membership.notes,
+).join(Person).join(Organization)
 
 
 class MembershipView(HTTPMethodView):
@@ -24,14 +37,14 @@ class MembershipView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            stmt: Select = select(Membership).where(Membership.id == pk)
+            stmt: Select = query_membership.where(Membership.id == pk)
             result: Result = await session.execute(stmt)
-            membership: Membership = result.scalar()
+            membership: Row = result.first()
 
         if not membership:
             return json(dict())
 
-        return json(membership.to_dict(), default=str)
+        return json(dict(membership), default=str)
 
     @staticmethod
     async def patch(request: Request, pk: str) -> HTTPResponse:
@@ -66,14 +79,9 @@ class MembershipsView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            stmt: Select = select(Membership)
-            results: Result = await session.execute(stmt)
-            memberships: List[Membership] = results.scalars().fetchall()
+            results: Result = await session.execute(query_membership)
 
-        if not memberships:
-            return json(dict())
-
-        return json([row.to_dict() for row in memberships], default=str)
+        return json(list(map(dict, results)), default=str)
 
     @staticmethod
     async def post(request: Request) -> HTTPResponse:

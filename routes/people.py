@@ -1,6 +1,7 @@
 import datetime
 from models.models import (
-    Address, AddressType, Email, EmailType, Gender, MembershipFeeCategory, Person, Phone, PhoneType
+    Address, AddressType, Email, EmailType, Gender, Membership, MembershipFeeCategory, Organization, Person, Phone,
+    PhoneType
 )
 from sanic import Blueprint
 from sanic.request import Request
@@ -63,11 +64,23 @@ class PhoneDataType(TypedDict):
     whatsapp: str
 
 
+class MembershipDataType(TypedDict):
+    id: str
+    person_id: str
+    organization_id: str
+    organization_name: str
+    active_flag: str
+    inactivity_status_id: Optional[int]
+    event_date: datetime.date
+    notes: Optional[str]
+
+
 class PersonResultType(TypedDict):
     person: PersonDataType
     address: List[AddressDataType]
     email: List[EmailDataType]
     phone: List[PhoneDataType]
+    membership: List[MembershipDataType]
 
 
 query_person: Select = select(
@@ -123,6 +136,18 @@ query_phone: Select = select(
 ).join(PhoneType)
 
 
+query_membership: Select = select(
+    Membership.id,
+    Membership.person_id,
+    Membership.organization_id,
+    Organization.name.label('organization_name'),
+    Membership.active_flag,
+    Membership.inactivity_status_id,
+    Membership.event_date,
+    Membership.notes,
+).join(Organization)
+
+
 class PersonView(HTTPMethodView):
 
     @staticmethod
@@ -149,12 +174,16 @@ class PersonView(HTTPMethodView):
             phone_stmt: Select = query_phone.where(Phone.person_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
+            membership_stmt: Select = query_membership.where(Membership.person_id == pk)
+            membership_result: Result = await session.execute(membership_stmt)
+
         if not person:
             return json({
                 "person": dict(),
                 "address": list(),
                 "email": list(),
                 "phone": list(),
+                "membership": list(),
             })
 
         result_dict: PersonResultType = {
@@ -162,6 +191,7 @@ class PersonView(HTTPMethodView):
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
+            "membership": list(map(dict, membership_result)),
         }
 
         return json(result_dict, default=str)
@@ -207,6 +237,7 @@ class PersonView(HTTPMethodView):
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
+            "membership": list(),
         }
 
         return json(result_dict, default=str)
