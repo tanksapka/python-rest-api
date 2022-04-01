@@ -12,7 +12,7 @@ from sqlalchemy.engine import Result, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import List, Optional, TypedDict
 
 
 class PersonDataType(TypedDict):
@@ -210,6 +210,20 @@ class PersonView(HTTPMethodView):
         async with session.begin():
             person_stmt: Update = update(Person).where(Person.id == pk).values(**payload['person'])
             await session.execute(person_stmt)
+
+            for item in payload['address']:
+                address_stmt: Update = update(Address).where(Address.id == pk).values(**item)
+                await session.execute(address_stmt)
+            for item in payload['email']:
+                email_stmt: Update = update(Email).where(Email.id == pk).values(**item)
+                await session.execute(email_stmt)
+            for item in payload['phone']:
+                phone_stmt: Update = update(Phone).where(Phone.id == pk).values(**item)
+                await session.execute(phone_stmt)
+            for item in payload['membership']:
+                membership_stmt: Update = update(Membership).where(Membership.id == pk).values(**item)
+                await session.execute(membership_stmt)
+
         async with session.begin():
             person_stmt: Select = query_person.where(Person.id == pk)
             person_result: Result = await session.execute(person_stmt)
@@ -224,12 +238,16 @@ class PersonView(HTTPMethodView):
             phone_stmt: Select = query_phone.where(Phone.person_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
+            membership_stmt: Select = query_membership.where(Membership.person_id == pk)
+            membership_result: Result = await session.execute(membership_stmt)
+
         if not person:
             return json({
                 "person": dict(),
                 "address": list(),
                 "email": list(),
                 "phone": list(),
+                "membership": list(),
             })
 
         result_dict: PersonResultType = {
@@ -237,7 +255,7 @@ class PersonView(HTTPMethodView):
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
-            "membership": list(),
+            "membership": list(map(dict, membership_result)),
         }
 
         return json(result_dict, default=str)
@@ -270,7 +288,7 @@ class PeopleView(HTTPMethodView):
         async with session.begin():
             person: Person = Person(**request.json)
             session.add_all([person])
-        json_data: Dict[str, Any] = person.to_dict()
+        json_data: PersonDataType = person.to_dict()
         return json(json_data, default=str)
 
 

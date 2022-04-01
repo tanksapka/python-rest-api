@@ -1,5 +1,5 @@
 import datetime
-from models.models import Address, AddressType, Email, EmailType, Organization, Phone, PhoneType
+from models.models import Address, AddressType, Email, EmailType, Membership, Organization, Person, Phone, PhoneType
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
@@ -60,11 +60,23 @@ class PhoneDataType(TypedDict):
     whatsapp: str
 
 
+class MembershipDataType(TypedDict):
+    id: str
+    person_id: str
+    person_name: str
+    organization_id: str
+    active_flag: str
+    inactivity_status_id: Optional[int]
+    event_date: datetime.date
+    notes: Optional[str]
+
+
 class OrganizationResultType(TypedDict):
-    person: OrganizationDataType
+    organization: OrganizationDataType
     address: List[AddressDataType]
     email: List[EmailDataType]
     phone: List[PhoneDataType]
+    membership: List[MembershipDataType]
 
 
 parent_organization: AliasedClass = aliased(Organization, name='parent_org')
@@ -118,6 +130,18 @@ query_phone: Select = select(
 ).join(PhoneType)
 
 
+query_membership: Select = select(
+    Membership.id,
+    Membership.person_id,
+    Person.name.label('person_name'),
+    Membership.organization_id,
+    Membership.active_flag,
+    Membership.inactivity_status_id,
+    Membership.event_date,
+    Membership.notes,
+).join(Person)
+
+
 class OrganizationView(HTTPMethodView):
 
     @staticmethod
@@ -144,19 +168,24 @@ class OrganizationView(HTTPMethodView):
             phone_stmt: Select = query_phone.where(Phone.organization_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
+            membership_stmt: Select = query_membership.where(Membership.organization_id == pk)
+            membership_result: Result = await session.execute(membership_stmt)
+
         if not organization:
             return json({
-                "person": dict(),
+                "organization": dict(),
                 "address": list(),
                 "email": list(),
                 "phone": list(),
+                "membership": list(),
             })
 
         result_dict: OrganizationResultType = {
-            "person": dict(organization),
+            "organization": dict(organization),
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
+            "membership": list(map(dict, membership_result)),
         }
 
         return json(result_dict, default=str)
@@ -171,10 +200,26 @@ class OrganizationView(HTTPMethodView):
         :return: JSON object with results
         """
         session: AsyncSession = request.ctx.session
-        payload: Dict[str, Any] = {k: v for k, v in request.json.items() if k not in ['id', 'created_on', 'created_by']}
+        payload: OrganizationResultType = request.json
         async with session.begin():
-            stmt: Update = update(Organization).where(Organization.id == pk).values(**payload)
-            await session.execute(stmt)
+            organization_stmt: Update = update(Organization).where(Organization.id == pk).values(
+                **payload['organization']
+            )
+            await session.execute(organization_stmt)
+
+            for item in payload['address']:
+                address_stmt: Update = update(Address).where(Address.id == pk).values(**item)
+                await session.execute(address_stmt)
+            for item in payload['email']:
+                email_stmt: Update = update(Email).where(Email.id == pk).values(**item)
+                await session.execute(email_stmt)
+            for item in payload['phone']:
+                phone_stmt: Update = update(Phone).where(Phone.id == pk).values(**item)
+                await session.execute(phone_stmt)
+            for item in payload['membership']:
+                membership_stmt: Update = update(Membership).where(Membership.id == pk).values(**item)
+                await session.execute(membership_stmt)
+
         async with session.begin():
             organization_stmt: Select = query_organization.where(Organization.id == pk)
             organization_result: Result = await session.execute(organization_stmt)
@@ -189,19 +234,24 @@ class OrganizationView(HTTPMethodView):
             phone_stmt: Select = query_phone.where(Phone.organization_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
+            membership_stmt: Select = query_membership.where(Membership.organization_id == pk)
+            membership_result: Result = await session.execute(membership_stmt)
+
         if not organization:
             return json({
-                "person": dict(),
+                "organization": dict(),
                 "address": list(),
                 "email": list(),
                 "phone": list(),
+                "membership": list(),
             })
 
         result_dict: OrganizationResultType = {
-            "person": dict(organization),
+            "organization": dict(organization),
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
+            "membership": list(map(dict, membership_result)),
         }
 
         return json(result_dict, default=str)
