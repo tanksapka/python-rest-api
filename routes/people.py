@@ -1,8 +1,5 @@
 import datetime
-from models.models import (
-    Address, AddressType, Email, EmailType, Gender, Membership, MembershipFeeCategory, Organization, Person, Phone,
-    PhoneType
-)
+from models.models import Address, Email, Gender, Membership, MembershipFeeCategory, Organization, Person, Phone
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
@@ -34,7 +31,6 @@ class AddressDataType(TypedDict):
     id: str
     person_id: str
     address_type_id: str
-    address_type_name: str
     zip: str
     city: str
     address_1: str
@@ -45,7 +41,6 @@ class EmailDataType(TypedDict):
     id: str
     person_id: str
     email_type_id: str
-    email_type_name: str
     email: str
     messenger: str
     skype: str
@@ -55,7 +50,6 @@ class PhoneDataType(TypedDict):
     id: str
     person_id: str
     phone_type_id: str
-    phone_type_name: str
     phone: str
     phone_extension: Optional[str]
     messenger: str
@@ -103,37 +97,34 @@ query_address: Select = select(
     Address.id,
     Address.person_id,
     Address.address_type_id,
-    AddressType.name.label('address_type_name'),
     Address.zip,
     Address.city,
     Address.address_1,
     Address.address_2,
-).join(AddressType)
+)
 
 
 query_email: Select = select(
     Email.id,
     Email.person_id,
     Email.email_type_id,
-    EmailType.name.label('email_type_name'),
     Email.email,
     Email.messenger,
     Email.skype,
-).join(EmailType)
+)
 
 
 query_phone: Select = select(
     Phone.id,
     Phone.person_id,
     Phone.phone_type_id,
-    PhoneType.name.label('phone_type_name'),
     Phone.phone_number,
     Phone.phone_extension,
     Phone.messenger,
     Phone.skype,
     Phone.viber,
     Phone.whatsapp,
-).join(PhoneType)
+)
 
 
 query_membership: Select = select(
