@@ -1,142 +1,35 @@
-import datetime
-from models.models import Address, Email, Gender, Membership, MembershipFeeCategory, Organization, Person, Phone
+from data_types.data_types import (
+    PersonAddressDataType, PersonEmailDataType, PersonPhoneDataType, PersonMembershipDataType, PersonDataType,
+    GenderTypeType, MembershipFeeCategoryType, AddressTypeType, EmailTypeType, PhoneTypeType
+)
+from models.models import Address, Email, Membership, Person, Phone
+from queries.queries import (
+    query_person_address, query_person_email, query_person_phone, query_person, query_person_membership, query_gender,
+    query_membership_fee_category, query_address_type, query_email_type, query_phone_type
+)
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
 from sanic.views import HTTPMethodView
-from sqlalchemy import select, update
+from sqlalchemy import update
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import List, Optional, TypedDict
-
-
-class PersonDataType(TypedDict):
-    id: str
-    registration_number: int
-    membership_id: str
-    person_name: str
-    birthdate: datetime.date
-    mother_name: str
-    gender_id: str
-    gender_name: str
-    identity_card_number: str
-    membership_fee_category_id: str
-    membership_fee_category_name: str
-    notes: Optional[str]
-
-
-class AddressDataType(TypedDict):
-    id: str
-    person_id: str
-    address_type_id: str
-    zip: str
-    city: str
-    address_1: str
-    address_2: Optional[str]
-
-
-class EmailDataType(TypedDict):
-    id: str
-    person_id: str
-    email_type_id: str
-    email: str
-    messenger: str
-    skype: str
-
-
-class PhoneDataType(TypedDict):
-    id: str
-    person_id: str
-    phone_type_id: str
-    phone: str
-    phone_extension: Optional[str]
-    messenger: str
-    skype: str
-    viber: str
-    whatsapp: str
-
-
-class MembershipDataType(TypedDict):
-    id: str
-    person_id: str
-    organization_id: str
-    organization_name: str
-    active_flag: str
-    inactivity_status_id: Optional[int]
-    event_date: datetime.date
-    notes: Optional[str]
+from typing import List, TypedDict
 
 
 class PersonResultType(TypedDict):
     person: PersonDataType
-    address: List[AddressDataType]
-    email: List[EmailDataType]
-    phone: List[PhoneDataType]
-    membership: List[MembershipDataType]
-
-
-query_person: Select = select(
-    Person.id,
-    Person.registration_number,
-    Person.membership_id,
-    Person.name.label('person_name'),
-    Person.birthdate,
-    Person.mother_name,
-    Person.gender_id,
-    Gender.name.label('gender_name'),
-    Person.identity_card_number,
-    Person.membership_fee_category_id,
-    MembershipFeeCategory.name.label('membership_fee_category_name'),
-    Person.notes,
-).join(Gender).join(MembershipFeeCategory)
-
-
-query_address: Select = select(
-    Address.id,
-    Address.person_id,
-    Address.address_type_id,
-    Address.zip,
-    Address.city,
-    Address.address_1,
-    Address.address_2,
-)
-
-
-query_email: Select = select(
-    Email.id,
-    Email.person_id,
-    Email.email_type_id,
-    Email.email,
-    Email.messenger,
-    Email.skype,
-)
-
-
-query_phone: Select = select(
-    Phone.id,
-    Phone.person_id,
-    Phone.phone_type_id,
-    Phone.phone_number,
-    Phone.phone_extension,
-    Phone.messenger,
-    Phone.skype,
-    Phone.viber,
-    Phone.whatsapp,
-)
-
-
-query_membership: Select = select(
-    Membership.id,
-    Membership.person_id,
-    Membership.organization_id,
-    Organization.name.label('organization_name'),
-    Membership.active_flag,
-    Membership.inactivity_status_id,
-    Membership.event_date,
-    Membership.notes,
-).join(Organization)
+    address: List[PersonAddressDataType]
+    email: List[PersonEmailDataType]
+    phone: List[PersonPhoneDataType]
+    membership: List[PersonMembershipDataType]
+    gender_type: List[GenderTypeType]
+    membership_fee_type: List[MembershipFeeCategoryType]
+    address_type: List[AddressTypeType]
+    email_type: List[EmailTypeType]
+    phone_type: List[PhoneTypeType]
 
 
 class PersonView(HTTPMethodView):
@@ -156,17 +49,23 @@ class PersonView(HTTPMethodView):
             person_result: Result = await session.execute(person_stmt)
             person: Row = person_result.first()
 
-            address_stmt: Select = query_address.where(Address.person_id == pk)
+            address_stmt: Select = query_person_address.where(Address.person_id == pk)
             address_result: Result = await session.execute(address_stmt)
 
-            email_stmt: Select = query_email.where(Email.person_id == pk)
+            email_stmt: Select = query_person_email.where(Email.person_id == pk)
             email_result: Result = await session.execute(email_stmt)
 
-            phone_stmt: Select = query_phone.where(Phone.person_id == pk)
+            phone_stmt: Select = query_person_phone.where(Phone.person_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
-            membership_stmt: Select = query_membership.where(Membership.person_id == pk)
+            membership_stmt: Select = query_person_membership.where(Membership.person_id == pk)
             membership_result: Result = await session.execute(membership_stmt)
+
+            gender_type_result: Result = await session.execute(query_gender)
+            membership_fee_type_result: Result = await session.execute(query_membership_fee_category)
+            address_type_result: Result = await session.execute(query_address_type)
+            email_type_result: Result = await session.execute(query_email_type)
+            phone_type_result: Result = await session.execute(query_phone_type)
 
         if not person:
             return json({
@@ -175,6 +74,11 @@ class PersonView(HTTPMethodView):
                 "email": list(),
                 "phone": list(),
                 "membership": list(),
+                "gender_type": list(),
+                "membership_fee_type": list(),
+                "address_type": list(),
+                "email_type": list(),
+                "phone_type": list(),
             })
 
         result_dict: PersonResultType = {
@@ -183,6 +87,11 @@ class PersonView(HTTPMethodView):
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
             "membership": list(map(dict, membership_result)),
+            "gender_type": list(map(dict, gender_type_result)),
+            "membership_fee_type": list(map(dict, membership_fee_type_result)),
+            "address_type": list(map(dict, address_type_result)),
+            "email_type": list(map(dict, email_type_result)),
+            "phone_type": list(map(dict, phone_type_result)),
         }
 
         return json(result_dict, default=str)
@@ -220,17 +129,23 @@ class PersonView(HTTPMethodView):
             person_result: Result = await session.execute(person_stmt)
             person: Row = person_result.first()
 
-            address_stmt: Select = query_address.where(Address.person_id == pk)
+            address_stmt: Select = query_person_address.where(Address.person_id == pk)
             address_result: Result = await session.execute(address_stmt)
 
-            email_stmt: Select = query_email.where(Email.person_id == pk)
+            email_stmt: Select = query_person_email.where(Email.person_id == pk)
             email_result: Result = await session.execute(email_stmt)
 
-            phone_stmt: Select = query_phone.where(Phone.person_id == pk)
+            phone_stmt: Select = query_person_phone.where(Phone.person_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
-            membership_stmt: Select = query_membership.where(Membership.person_id == pk)
+            membership_stmt: Select = query_person_membership.where(Membership.person_id == pk)
             membership_result: Result = await session.execute(membership_stmt)
+
+            gender_type_result: Result = await session.execute(query_gender)
+            membership_fee_type_result: Result = await session.execute(query_membership_fee_category)
+            address_type_result: Result = await session.execute(query_address_type)
+            email_type_result: Result = await session.execute(query_email_type)
+            phone_type_result: Result = await session.execute(query_phone_type)
 
         if not person:
             return json({
@@ -239,6 +154,11 @@ class PersonView(HTTPMethodView):
                 "email": list(),
                 "phone": list(),
                 "membership": list(),
+                "gender_type": list(),
+                "membership_fee_type": list(),
+                "address_type": list(),
+                "email_type": list(),
+                "phone_type": list(),
             })
 
         result_dict: PersonResultType = {
@@ -247,6 +167,11 @@ class PersonView(HTTPMethodView):
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
             "membership": list(map(dict, membership_result)),
+            "gender_type": list(map(dict, gender_type_result)),
+            "membership_fee_type": list(map(dict, membership_fee_type_result)),
+            "address_type": list(map(dict, address_type_result)),
+            "email_type": list(map(dict, email_type_result)),
+            "phone_type": list(map(dict, phone_type_result)),
         }
 
         return json(result_dict, default=str)
