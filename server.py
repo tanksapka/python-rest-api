@@ -1,4 +1,6 @@
 from contextvars import ContextVar
+from cors import add_cors_headers
+from options import setup_options
 from routes.addresses import bp_address
 from routes.emails import bp_email
 from routes.maps import bp_address_type, bp_email_type, bp_gender, bp_membership_fee_category, bp_phone_type
@@ -29,14 +31,13 @@ async def close_session(request: Request, response) -> None:
         await request.ctx.session.close()
 
 
-app.blueprint(bp_gender)
-app.blueprint(bp_membership_fee_category)
-app.blueprint(bp_address_type)
-app.blueprint(bp_phone_type)
-app.blueprint(bp_email_type)
-app.blueprint(bp_person)
-app.blueprint(bp_organization)
-app.blueprint(bp_address)
-app.blueprint(bp_email)
-app.blueprint(bp_phone)
-app.blueprint(bp_memberships)
+app.blueprint([
+    bp_gender, bp_membership_fee_category, bp_address_type, bp_phone_type, bp_email_type, bp_person, bp_organization,
+    bp_address, bp_email, bp_phone, bp_memberships
+])
+
+# Add OPTIONS handlers to any route that is missing it
+app.register_listener(setup_options, "before_server_start")
+
+# Fill in CORS headers
+app.register_middleware(add_cors_headers, "response")
