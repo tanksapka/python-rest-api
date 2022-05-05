@@ -1,14 +1,43 @@
+import datetime
+import uuid
 from models.models import AddressType, EmailType, Gender, MembershipFeeCategory, PhoneType
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
 from sanic.views import HTTPMethodView
 from sqlalchemy import select, update
+from sqlalchemy.dialects.sqlite import insert, Insert
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, TypedDict
+
+
+class MapJavaScriptType(TypedDict):
+    id: Optional[str]
+    created_on: str
+    created_by: str
+    name: str
+    description: Optional[str]
+    valid_flag: str
+
+
+class MapPythonType(TypedDict):
+    id: str
+    created_on: datetime.datetime
+    created_by: str
+    name: str
+    description: str
+    valid_flag: str
+
+
+def process_map_item(map_item: MapJavaScriptType) -> MapPythonType:
+    map_item.setdefault('id', str(uuid.uuid1()))
+    return {
+        k: v if k != 'created_on' else datetime.datetime.strptime(v, '%Y-%m-%dT%H:%M:%S.%fZ')
+        for k, v in map_item.items()
+    }
 
 
 class GenderView(HTTPMethodView):
@@ -82,11 +111,17 @@ class GendersView(HTTPMethodView):
         :return: JSON with id and timestamp
         """
         session: AsyncSession = request.ctx.session
+        items: List[MapPythonType] = [process_map_item(row) for row in request.json.get('data', [])]
         async with session.begin():
-            gender: GenderView.DBObject = self.DBObject(**request.json)
-            session.add_all([gender])
-        json_data: Dict[str, Any] = gender.to_dict()
-        return json(json_data, default=str)
+            for item in items:
+                upsert_stmt: Insert = insert(self.DBObject).values(item).on_conflict_do_update(
+                    index_elements=['id'], set_=item
+                )
+                # print(upsert_stmt, type(upsert_stmt), item, sep='\n')
+                result = await session.execute(upsert_stmt)
+                # print(result)
+        # print(items)
+        return json(items, default=str)
 
 
 class MembershipFeeCategoryView(GenderView):
