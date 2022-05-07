@@ -2,10 +2,11 @@ from data_types.data_types import (
     PersonAddressDataType, PersonEmailDataType, PersonPhoneDataType, PersonMembershipDataType, PersonDataType,
     GenderTypeType, MembershipFeeCategoryType, AddressTypeType, EmailTypeType, PhoneTypeType
 )
+from math import ceil
 from models.models import Address, Email, Membership, Person, Phone
 from queries.queries import (
     query_person_address, query_person_email, query_person_phone, query_person, query_person_membership, query_gender,
-    query_membership_fee_category, query_address_type, query_email_type, query_phone_type
+    query_membership_fee_category, query_address_type, query_email_type, query_phone_type, query_people_count
 )
 from sanic import Blueprint
 from sanic.request import Request
@@ -188,9 +189,20 @@ class PeopleView(HTTPMethodView):
         :return: JSON object with results
         """
         session: AsyncSession = request.ctx.session
+        page = int(request.args.get('page', 0))
+        page_size = int(request.args.get("page_size", 20))
+        query = query_person.limit(page_size).offset(page_size * page)
         async with session.begin():
-            results: Result = await session.execute(query_person)
-        return json(list(map(dict, results)), default=str)
+            results: Result = await session.execute(query)
+            row_count_result: Result = await session.execute(query_people_count)
+            row_count: int = row_count_result.scalar()
+        return json({
+            "people": list(map(dict, results)),
+            "page": page,
+            "page_size": page_size,
+            "row_count": row_count,
+            "page_count": ceil(row_count / page_size)
+        }, default=str)
 
     @staticmethod
     async def post(request: Request) -> HTTPResponse:

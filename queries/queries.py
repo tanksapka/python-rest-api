@@ -5,6 +5,7 @@ from models.models import (
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.util import AliasedClass
+from sqlalchemy.sql.functions import count
 from sqlalchemy.sql.selectable import Select
 
 
@@ -22,6 +23,8 @@ query_person: Select = select(
     MembershipFeeCategory.name.label('membership_fee_category_name'),
     Person.notes,
 ).join(Gender).join(MembershipFeeCategory)
+
+query_people_count: count = count(Person.id)
 
 parent_organization: AliasedClass = aliased(Organization, name='parent_org')
 query_organization: Select = select(
