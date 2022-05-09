@@ -37,7 +37,9 @@ query_organization: Select = select(
     Organization.establishment_date,
     Organization.termination_date,
     Organization.notes,
-).join(parent_organization, onclause=Organization.organization_parent_id == parent_organization.id)
+).join(parent_organization, isouter=True, onclause=Organization.organization_parent_id == parent_organization.id)
+
+query_organization_count: count = count(Organization.id)
 
 query_person_address: Select = select(
     Address.id,
