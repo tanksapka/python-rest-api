@@ -28,7 +28,7 @@ query_people_count: count = count(Person.id)
 
 parent_organization: AliasedClass = aliased(Organization, name='parent_org')
 query_organization: Select = select(
-    Organization.id,
+    Organization.id.label('organization_id'),
     Organization.name.label('organization_name'),
     parent_organization.id.label('parent_organization_id'),
     parent_organization.name.label('parent_organization_name'),
