@@ -10,7 +10,7 @@ from sqlalchemy.sql.selectable import Select
 
 
 query_person: Select = select(
-    Person.id,
+    Person.id.label('person_id'),
     Person.registration_number,
     Person.membership_id,
     Person.name.label('person_name'),
