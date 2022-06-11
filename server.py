@@ -3,7 +3,8 @@ from cors import add_cors_headers
 from options import setup_options
 from routes.addresses import bp_address
 from routes.emails import bp_email
-from routes.maps import bp_address_type, bp_email_type, bp_gender, bp_membership_fee_category, bp_phone_type
+from routes.maps import bp_address_type, bp_email_type, bp_gender, bp_membership_fee_category, bp_phone_type, \
+    bp_person_mapping, bp_organization_mapping
 from routes.memberships import bp_memberships
 from routes.organizations import bp_organization
 from routes.people import bp_person
@@ -33,7 +34,7 @@ async def close_session(request: Request, response) -> None:
 
 app.blueprint([
     bp_gender, bp_membership_fee_category, bp_address_type, bp_phone_type, bp_email_type, bp_person, bp_organization,
-    bp_address, bp_email, bp_phone, bp_memberships
+    bp_address, bp_email, bp_phone, bp_memberships, bp_person_mapping, bp_organization_mapping
 ])
 
 # Add OPTIONS handlers to any route that is missing it

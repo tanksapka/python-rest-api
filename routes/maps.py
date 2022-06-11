@@ -1,6 +1,10 @@
 import datetime
 import uuid
+from data_types.data_types import GenderTypeType, MembershipFeeCategoryType, AddressTypeType, EmailTypeType, \
+    PhoneTypeType
 from models.models import AddressType, EmailType, Gender, MembershipFeeCategory, PhoneType
+from queries.queries import query_gender, query_membership_fee_category, query_address_type, query_email_type, \
+    query_phone_type
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
@@ -30,6 +34,20 @@ class MapPythonType(TypedDict):
     name: str
     description: str
     valid_flag: str
+
+
+class PersonMappingType(TypedDict):
+    gender_type: List[GenderTypeType]
+    membership_fee_type: List[MembershipFeeCategoryType]
+    address_type: List[AddressTypeType]
+    email_type: List[EmailTypeType]
+    phone_type: List[PhoneTypeType]
+
+
+class OrganizationMappingType(TypedDict):
+    address_type: List[AddressTypeType]
+    email_type: List[EmailTypeType]
+    phone_type: List[PhoneTypeType]
 
 
 def process_map_item(map_item: MapJavaScriptType) -> MapPythonType:
@@ -308,6 +326,60 @@ class EmailTypesView(GendersView):
         return await super().post(request)
 
 
+class PersonMappingsView(HTTPMethodView):
+
+    @staticmethod
+    async def get(request: Request) -> HTTPResponse:
+        """
+        Gets person related mapping data.
+
+        :param request: `Request` object
+        :return: JSON object with results
+        """
+        session: AsyncSession = request.ctx.session
+        async with session.begin():
+            gender_type_result: Result = await session.execute(query_gender)
+            membership_fee_type_result: Result = await session.execute(query_membership_fee_category)
+            address_type_result: Result = await session.execute(query_address_type)
+            email_type_result: Result = await session.execute(query_email_type)
+            phone_type_result: Result = await session.execute(query_phone_type)
+
+        result_dict: PersonMappingType = {
+            "gender_type": list(map(dict, gender_type_result)),
+            "membership_fee_type": list(map(dict, membership_fee_type_result)),
+            "address_type": list(map(dict, address_type_result)),
+            "email_type": list(map(dict, email_type_result)),
+            "phone_type": list(map(dict, phone_type_result)),
+        }
+
+        return json(result_dict, default=str)
+
+
+class OrganizationMappingsView(HTTPMethodView):
+
+    @staticmethod
+    async def get(request: Request) -> HTTPResponse:
+        """
+        Gets organization related mapping data.
+
+        :param request: `Request` object
+        :return: JSON object with results
+        """
+        session: AsyncSession = request.ctx.session
+        async with session.begin():
+            address_type_result: Result = await session.execute(query_address_type)
+            email_type_result: Result = await session.execute(query_email_type)
+            phone_type_result: Result = await session.execute(query_phone_type)
+
+        result_dict: OrganizationMappingType = {
+            "address_type": list(map(dict, address_type_result)),
+            "email_type": list(map(dict, email_type_result)),
+            "phone_type": list(map(dict, phone_type_result)),
+        }
+
+        return json(result_dict, default=str)
+
+
 bp_gender = Blueprint("genders", url_prefix="/genders/")
 bp_gender.add_route(GenderView.as_view(), '/<pk:str>')
 bp_gender.add_route(GendersView.as_view(), '/')
@@ -327,3 +399,9 @@ bp_phone_type.add_route(PhoneTypesView.as_view(), "/")
 bp_email_type = Blueprint("email_types", url_prefix="/email-types/")
 bp_email_type.add_route(EmailTypeView.as_view(), "/<pk:str>")
 bp_email_type.add_route(EmailTypesView.as_view(), "/")
+
+bp_person_mapping = Blueprint("person_mappings", url_prefix="/person-mappings/")
+bp_person_mapping.add_route(PersonMappingsView.as_view(), "/")
+
+bp_organization_mapping = Blueprint("organization_mappings", url_prefix="/organization-mappings/")
+bp_organization_mapping.add_route(OrganizationMappingsView.as_view(), "/")
