@@ -5,6 +5,7 @@ from models.models import (
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.util import AliasedClass
+from sqlalchemy.sql import and_
 from sqlalchemy.sql.functions import count
 from sqlalchemy.sql.selectable import Select
 
@@ -40,6 +41,11 @@ query_organization: Select = select(
 ).join(parent_organization, isouter=True, onclause=Organization.organization_parent_id == parent_organization.id)
 
 query_organization_count: count = count(Organization.id)
+
+query_parent_organizations: Select = select(
+    Organization.id.label('organization_id'),
+    Organization.name.label('organization_name'),
+).where(and_(Organization.organization_parent_id.is_(None), Organization.termination_date.is_(None)))
 
 query_person_address: Select = select(
     Address.id,

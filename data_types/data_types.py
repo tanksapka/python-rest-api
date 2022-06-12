@@ -139,3 +139,8 @@ class EmailTypeType(TypedDict):
 class PhoneTypeType(TypedDict):
     value: str
     label: str
+
+
+class ParentOrganizationsType(TypedDict):
+    organization_id: str
+    organization_name: str

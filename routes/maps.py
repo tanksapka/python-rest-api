@@ -1,10 +1,10 @@
 import datetime
 import uuid
 from data_types.data_types import GenderTypeType, MembershipFeeCategoryType, AddressTypeType, EmailTypeType, \
-    PhoneTypeType
+    PhoneTypeType, ParentOrganizationsType
 from models.models import AddressType, EmailType, Gender, MembershipFeeCategory, PhoneType
 from queries.queries import query_gender, query_membership_fee_category, query_address_type, query_email_type, \
-    query_phone_type
+    query_phone_type, query_parent_organizations
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
@@ -45,6 +45,7 @@ class PersonMappingType(TypedDict):
 
 
 class OrganizationMappingType(TypedDict):
+    parent_organizations: List[ParentOrganizationsType]
     address_type: List[AddressTypeType]
     email_type: List[EmailTypeType]
     phone_type: List[PhoneTypeType]
@@ -367,11 +368,13 @@ class OrganizationMappingsView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
+            parent_organizations: Result = await session.execute(query_parent_organizations)
             address_type_result: Result = await session.execute(query_address_type)
             email_type_result: Result = await session.execute(query_email_type)
             phone_type_result: Result = await session.execute(query_phone_type)
 
         result_dict: OrganizationMappingType = {
+            "parent_organizations": list(map(dict, parent_organizations)),
             "address_type": list(map(dict, address_type_result)),
             "email_type": list(map(dict, email_type_result)),
             "phone_type": list(map(dict, phone_type_result)),

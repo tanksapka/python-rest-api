@@ -1,12 +1,13 @@
 from data_types.data_types import (
     OrganizationAddressDataType, OrganizationEmailDataType, OrganizationPhoneDataType, OrganizationMembershipDataType,
-    OrganizationDataType, AddressTypeType, EmailTypeType, PhoneTypeType
+    OrganizationDataType, AddressTypeType, EmailTypeType, PhoneTypeType, ParentOrganizationsType
 )
 from math import ceil
 from models.models import Address, Email, Membership, Organization, Phone
 from queries.queries import (
     query_organization_address, query_organization_email, query_organization_phone, query_organization_membership,
-    query_organization, query_address_type, query_email_type, query_phone_type, query_organization_count
+    query_organization, query_address_type, query_email_type, query_phone_type, query_organization_count,
+    query_parent_organizations
 )
 from sanic import Blueprint
 from sanic.request import Request
@@ -26,6 +27,7 @@ class OrganizationResultType(TypedDict):
     email: List[OrganizationEmailDataType]
     phone: List[OrganizationPhoneDataType]
     membership: List[OrganizationMembershipDataType]
+    parent_organizations: List[ParentOrganizationsType]
     address_type: List[AddressTypeType]
     email_type: List[EmailTypeType]
     phone_type: List[PhoneTypeType]
@@ -60,6 +62,7 @@ class OrganizationView(HTTPMethodView):
             membership_stmt: Select = query_organization_membership.where(Membership.organization_id == pk)
             membership_result: Result = await session.execute(membership_stmt)
 
+            parent_organizations: Result = await session.execute(query_parent_organizations)
             address_type_result: Result = await session.execute(query_address_type)
             email_type_result: Result = await session.execute(query_email_type)
             phone_type_result: Result = await session.execute(query_phone_type)
@@ -71,6 +74,7 @@ class OrganizationView(HTTPMethodView):
                 "email": list(),
                 "phone": list(),
                 "membership": list(),
+                "parent_organizations": list(),
                 "address_type": list(),
                 "email_type": list(),
                 "phone_type": list(),
@@ -82,6 +86,7 @@ class OrganizationView(HTTPMethodView):
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
             "membership": list(map(dict, membership_result)),
+            "parent_organizations": list(map(dict, parent_organizations)),
             "address_type": list(map(dict, address_type_result)),
             "email_type": list(map(dict, email_type_result)),
             "phone_type": list(map(dict, phone_type_result)),
@@ -136,6 +141,7 @@ class OrganizationView(HTTPMethodView):
             membership_stmt: Select = query_organization_membership.where(Membership.organization_id == pk)
             membership_result: Result = await session.execute(membership_stmt)
 
+            parent_organizations: Result = await session.execute(query_parent_organizations)
             address_type_result: Result = await session.execute(query_address_type)
             email_type_result: Result = await session.execute(query_email_type)
             phone_type_result: Result = await session.execute(query_phone_type)
@@ -147,6 +153,7 @@ class OrganizationView(HTTPMethodView):
                 "email": list(),
                 "phone": list(),
                 "membership": list(),
+                "parent_organizations": list(),
                 "address_type": list(),
                 "email_type": list(),
                 "phone_type": list(),
@@ -158,6 +165,7 @@ class OrganizationView(HTTPMethodView):
             "email": list(map(dict, email_result)),
             "phone": list(map(dict, phone_result)),
             "membership": list(map(dict, membership_result)),
+            "parent_organizations": list(map(dict, parent_organizations)),
             "address_type": list(map(dict, address_type_result)),
             "email_type": list(map(dict, email_type_result)),
             "phone_type": list(map(dict, phone_type_result)),
