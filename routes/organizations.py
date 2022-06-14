@@ -18,7 +18,7 @@ from sqlalchemy.engine import Result, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import Any, Dict, List, TypedDict
+from typing import Any, Dict, List, TypedDict, Optional
 
 
 class OrganizationResultType(TypedDict):
@@ -31,6 +31,66 @@ class OrganizationResultType(TypedDict):
     address_type: List[AddressTypeType]
     email_type: List[EmailTypeType]
     phone_type: List[PhoneTypeType]
+
+
+class OrganizationDataJavaScriptType(TypedDict):
+    organization_name: str
+    parent_organization_id: str
+    parent_organization_name: str
+    description: Optional[str]
+    accepts_members_flag: str
+    establishment_date: str
+    termination_date: Optional[str]
+    notes: Optional[str]
+
+
+class OrganizationAddressDataJavaScriptType(TypedDict):
+    address_type_id: str
+    address_type_name: str
+    zip: str
+    city: str
+    address_1: str
+    address_2: Optional[str]
+
+
+class OrganizationEmailDataJavaScriptType(TypedDict):
+    email_type_id: str
+    email_type_name: str
+    email: str
+    messenger: str
+    skype: str
+
+
+class OrganizationPhoneDataJavaScriptType(TypedDict):
+    phone_type_id: str
+    phone_type_name: str
+    phone: str
+    phone_extension: Optional[str]
+    messenger: str
+    skype: str
+    viber: str
+    whatsapp: str
+
+
+def process_organization_data(data: OrganizationDataJavaScriptType) -> OrganizationDataType:
+    pass
+
+
+def process_address_data(data: List[OrganizationAddressDataJavaScriptType]) -> List[OrganizationAddressDataType]:
+    pass
+
+
+def process_email_data(data: List[OrganizationEmailDataJavaScriptType]) -> List[OrganizationEmailDataType]:
+    pass
+
+
+def process_phone_data(data: List[OrganizationPhoneDataJavaScriptType]) -> List[OrganizationPhoneDataType]:
+    pass
+
+
+# TODO: make type names shorter and move them to data types module
+# TODO: check optional settings
+# TODO: cross-check types with TypeScript types
 
 
 class OrganizationView(HTTPMethodView):
