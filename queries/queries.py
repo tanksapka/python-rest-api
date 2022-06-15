@@ -61,12 +61,11 @@ query_organization_address: Select = select(
     Address.id,
     Address.organization_id,
     Address.address_type_id,
-    AddressType.name.label('address_type_name'),
     Address.zip,
     Address.city,
     Address.address_1,
     Address.address_2,
-).join(AddressType)
+)
 
 query_person_email: Select = select(
     Email.id,
@@ -81,11 +80,10 @@ query_organization_email: Select = select(
     Email.id,
     Email.organization_id,
     Email.email_type_id,
-    EmailType.name.label('email_type_name'),
     Email.email,
     Email.messenger,
     Email.skype,
-).join(EmailType)
+)
 
 query_person_phone: Select = select(
     Phone.id,
@@ -103,14 +101,13 @@ query_organization_phone: Select = select(
     Phone.id,
     Phone.organization_id,
     Phone.phone_type_id,
-    PhoneType.name.label('phone_type_name'),
     Phone.phone_number,
     Phone.phone_extension,
     Phone.messenger,
     Phone.skype,
     Phone.viber,
     Phone.whatsapp,
-).join(PhoneType)
+)
 
 query_person_membership: Select = select(
     Membership.id,

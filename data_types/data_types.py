@@ -3,22 +3,22 @@ from typing import Optional, TypedDict
 
 
 class PersonDataType(TypedDict):
-    id: str
+    person_id: str
     registration_number: int
     membership_id: str
     person_name: str
-    birthdate: datetime.date
-    mother_name: str
-    gender_id: str
-    gender_name: str
-    identity_card_number: str
+    birthdate: Optional[datetime.date]
+    mother_name: Optional[str]
+    gender_id: Optional[str]
+    gender_name: Optional[str]
+    identity_card_number: Optional[str]
     membership_fee_category_id: str
     membership_fee_category_name: str
     notes: Optional[str]
 
 
 class OrganizationDataType(TypedDict):
-    id: str
+    organization_id: str
     organization_name: str
     parent_organization_id: str
     parent_organization_name: str
@@ -43,7 +43,6 @@ class OrganizationAddressDataType(TypedDict):
     id: str
     organization_id: str
     address_type_id: str
-    address_type_name: str
     zip: str
     city: str
     address_1: str
@@ -63,7 +62,6 @@ class OrganizationEmailDataType(TypedDict):
     id: str
     organization_id: str
     email_type_id: str
-    email_type_name: str
     email: str
     messenger: str
     skype: str
@@ -85,7 +83,6 @@ class OrganizationPhoneDataType(TypedDict):
     id: str
     organization_id: str
     phone_type_id: str
-    phone_type_name: str
     phone: str
     phone_extension: Optional[str]
     messenger: str
