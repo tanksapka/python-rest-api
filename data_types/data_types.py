@@ -1,8 +1,8 @@
 import datetime
-from typing import Optional, TypedDict
+from typing import Optional, List, TypedDict
 
 
-class PersonDataType(TypedDict):
+class Person(TypedDict):
     person_id: str
     registration_number: int
     membership_id: str
@@ -17,7 +17,7 @@ class PersonDataType(TypedDict):
     notes: Optional[str]
 
 
-class OrganizationDataType(TypedDict):
+class Organization(TypedDict):
     organization_id: str
     organization_name: str
     parent_organization_id: str
@@ -29,7 +29,7 @@ class OrganizationDataType(TypedDict):
     notes: str
 
 
-class PersonAddressDataType(TypedDict):
+class PersonAddress(TypedDict):
     id: str
     person_id: str
     address_type_id: str
@@ -39,7 +39,7 @@ class PersonAddressDataType(TypedDict):
     address_2: Optional[str]
 
 
-class OrganizationAddressDataType(TypedDict):
+class OrganizationAddress(TypedDict):
     id: str
     organization_id: str
     address_type_id: str
@@ -49,7 +49,7 @@ class OrganizationAddressDataType(TypedDict):
     address_2: Optional[str]
 
 
-class PersonEmailDataType(TypedDict):
+class PersonEmail(TypedDict):
     id: str
     person_id: str
     email_type_id: str
@@ -58,7 +58,7 @@ class PersonEmailDataType(TypedDict):
     skype: str
 
 
-class OrganizationEmailDataType(TypedDict):
+class OrganizationEmail(TypedDict):
     id: str
     organization_id: str
     email_type_id: str
@@ -67,7 +67,7 @@ class OrganizationEmailDataType(TypedDict):
     skype: str
 
 
-class PersonPhoneDataType(TypedDict):
+class PersonPhone(TypedDict):
     id: str
     person_id: str
     phone_type_id: str
@@ -79,7 +79,7 @@ class PersonPhoneDataType(TypedDict):
     whatsapp: str
 
 
-class OrganizationPhoneDataType(TypedDict):
+class OrganizationPhone(TypedDict):
     id: str
     organization_id: str
     phone_type_id: str
@@ -91,7 +91,7 @@ class OrganizationPhoneDataType(TypedDict):
     whatsapp: str
 
 
-class PersonMembershipDataType(TypedDict):
+class PersonMembership(TypedDict):
     id: str
     person_id: str
     organization_id: str
@@ -102,7 +102,7 @@ class PersonMembershipDataType(TypedDict):
     notes: Optional[str]
 
 
-class OrganizationMembershipDataType(TypedDict):
+class OrganizationMembership(TypedDict):
     id: str
     person_id: str
     person_name: str
@@ -113,31 +113,44 @@ class OrganizationMembershipDataType(TypedDict):
     notes: Optional[str]
 
 
-class GenderTypeType(TypedDict):
+class GenderType(TypedDict):
     value: str
     label: str
 
 
-class MembershipFeeCategoryType(TypedDict):
+class MembershipFeeCategory(TypedDict):
     value: str
     label: str
 
 
-class AddressTypeType(TypedDict):
+class AddressType(TypedDict):
     value: str
     label: str
 
 
-class EmailTypeType(TypedDict):
+class EmailType(TypedDict):
     value: str
     label: str
 
 
-class PhoneTypeType(TypedDict):
+class PhoneType(TypedDict):
     value: str
     label: str
 
 
-class ParentOrganizationsType(TypedDict):
+class ParentOrganization(TypedDict):
     organization_id: str
     organization_name: str
+
+
+class PersonResult(TypedDict):
+    person: Person
+    address: List[PersonAddress]
+    email: List[PersonEmail]
+    phone: List[PersonPhone]
+    membership: List[PersonMembership]
+    gender_type: List[GenderType]
+    membership_fee_type: List[MembershipFeeCategory]
+    address_type: List[AddressType]
+    email_type: List[EmailType]
+    phone_type: List[PhoneType]

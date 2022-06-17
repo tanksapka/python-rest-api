@@ -1,9 +1,6 @@
-from data_types.data_types import (
-    PersonAddressDataType, PersonEmailDataType, PersonPhoneDataType, PersonMembershipDataType, PersonDataType,
-    GenderTypeType, MembershipFeeCategoryType, AddressTypeType, EmailTypeType, PhoneTypeType
-)
+import data_types.data_types as t
+import models.models as m
 from math import ceil
-from models.models import Address, Email, Membership, Person, Phone
 from queries.queries import (
     query_person_address, query_person_email, query_person_phone, query_person, query_person_membership, query_gender,
     query_membership_fee_category, query_address_type, query_email_type, query_phone_type, query_people_count
@@ -17,20 +14,6 @@ from sqlalchemy.engine import Result, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import List, TypedDict
-
-
-class PersonResultType(TypedDict):
-    person: PersonDataType
-    address: List[PersonAddressDataType]
-    email: List[PersonEmailDataType]
-    phone: List[PersonPhoneDataType]
-    membership: List[PersonMembershipDataType]
-    gender_type: List[GenderTypeType]
-    membership_fee_type: List[MembershipFeeCategoryType]
-    address_type: List[AddressTypeType]
-    email_type: List[EmailTypeType]
-    phone_type: List[PhoneTypeType]
 
 
 class PersonView(HTTPMethodView):
@@ -46,20 +29,20 @@ class PersonView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            person_stmt: Select = query_person.where(Person.id == pk)
+            person_stmt: Select = query_person.where(m.Person.id == pk)
             person_result: Result = await session.execute(person_stmt)
             person: Row = person_result.first()
 
-            address_stmt: Select = query_person_address.where(Address.person_id == pk)
+            address_stmt: Select = query_person_address.where(m.Address.person_id == pk)
             address_result: Result = await session.execute(address_stmt)
 
-            email_stmt: Select = query_person_email.where(Email.person_id == pk)
+            email_stmt: Select = query_person_email.where(m.Email.person_id == pk)
             email_result: Result = await session.execute(email_stmt)
 
-            phone_stmt: Select = query_person_phone.where(Phone.person_id == pk)
+            phone_stmt: Select = query_person_phone.where(m.Phone.person_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
-            membership_stmt: Select = query_person_membership.where(Membership.person_id == pk)
+            membership_stmt: Select = query_person_membership.where(m.Membership.person_id == pk)
             membership_result: Result = await session.execute(membership_stmt)
 
             gender_type_result: Result = await session.execute(query_gender)
@@ -82,7 +65,7 @@ class PersonView(HTTPMethodView):
                 "phone_type": list(),
             })
 
-        result_dict: PersonResultType = {
+        result_dict: t.PersonResult = {
             "person": dict(person),
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),
@@ -107,39 +90,39 @@ class PersonView(HTTPMethodView):
         :return: JSON object with results
         """
         session: AsyncSession = request.ctx.session
-        payload: PersonResultType = request.json
+        payload: t.PersonResult = request.json
         async with session.begin():
-            person_stmt: Update = update(Person).where(Person.id == pk).values(**payload['person'])
+            person_stmt: Update = update(m.Person).where(m.Person.id == pk).values(**payload['person'])
             await session.execute(person_stmt)
 
             for item in payload['address']:
-                address_stmt: Update = update(Address).where(Address.id == pk).values(**item)
+                address_stmt: Update = update(m.Address).where(m.Address.id == pk).values(**item)
                 await session.execute(address_stmt)
             for item in payload['email']:
-                email_stmt: Update = update(Email).where(Email.id == pk).values(**item)
+                email_stmt: Update = update(m.Email).where(m.Email.id == pk).values(**item)
                 await session.execute(email_stmt)
             for item in payload['phone']:
-                phone_stmt: Update = update(Phone).where(Phone.id == pk).values(**item)
+                phone_stmt: Update = update(m.Phone).where(m.Phone.id == pk).values(**item)
                 await session.execute(phone_stmt)
             for item in payload['membership']:
-                membership_stmt: Update = update(Membership).where(Membership.id == pk).values(**item)
+                membership_stmt: Update = update(m.Membership).where(m.Membership.id == pk).values(**item)
                 await session.execute(membership_stmt)
 
         async with session.begin():
-            person_stmt: Select = query_person.where(Person.id == pk)
+            person_stmt: Select = query_person.where(m.Person.id == pk)
             person_result: Result = await session.execute(person_stmt)
             person: Row = person_result.first()
 
-            address_stmt: Select = query_person_address.where(Address.person_id == pk)
+            address_stmt: Select = query_person_address.where(m.Address.person_id == pk)
             address_result: Result = await session.execute(address_stmt)
 
-            email_stmt: Select = query_person_email.where(Email.person_id == pk)
+            email_stmt: Select = query_person_email.where(m.Email.person_id == pk)
             email_result: Result = await session.execute(email_stmt)
 
-            phone_stmt: Select = query_person_phone.where(Phone.person_id == pk)
+            phone_stmt: Select = query_person_phone.where(m.Phone.person_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
-            membership_stmt: Select = query_person_membership.where(Membership.person_id == pk)
+            membership_stmt: Select = query_person_membership.where(m.Membership.person_id == pk)
             membership_result: Result = await session.execute(membership_stmt)
 
             gender_type_result: Result = await session.execute(query_gender)
@@ -162,7 +145,7 @@ class PersonView(HTTPMethodView):
                 "phone_type": list(),
             })
 
-        result_dict: PersonResultType = {
+        result_dict: t.PersonResult = {
             "person": dict(person),
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),
@@ -214,9 +197,9 @@ class PeopleView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            person: Person = Person(**request.json)
+            person: m.Person = m.Person(**request.json)
             session.add_all([person])
-        json_data: PersonDataType = person.to_dict()
+        json_data: t.Person = person.to_dict()
         return json(json_data, default=str)
 
 

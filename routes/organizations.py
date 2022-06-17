@@ -1,9 +1,6 @@
-from data_types.data_types import (
-    OrganizationAddressDataType, OrganizationEmailDataType, OrganizationPhoneDataType, OrganizationMembershipDataType,
-    OrganizationDataType, AddressTypeType, EmailTypeType, PhoneTypeType, ParentOrganizationsType
-)
+import data_types.data_types as t
+import models.models as m
 from math import ceil
-from models.models import Address, Email, Membership, Organization, Phone
 from queries.queries import (
     query_organization_address, query_organization_email, query_organization_phone, query_organization_membership,
     query_organization, query_address_type, query_email_type, query_phone_type, query_organization_count,
@@ -22,15 +19,15 @@ from typing import Any, Dict, List, TypedDict, Optional
 
 
 class OrganizationResultType(TypedDict):
-    organization: OrganizationDataType
-    address: List[OrganizationAddressDataType]
-    email: List[OrganizationEmailDataType]
-    phone: List[OrganizationPhoneDataType]
-    membership: List[OrganizationMembershipDataType]
-    parent_organizations: List[ParentOrganizationsType]
-    address_type: List[AddressTypeType]
-    email_type: List[EmailTypeType]
-    phone_type: List[PhoneTypeType]
+    organization: t.Organization
+    address: List[t.OrganizationAddress]
+    email: List[t.OrganizationEmail]
+    phone: List[t.OrganizationPhone]
+    membership: List[t.OrganizationMembership]
+    parent_organizations: List[t.ParentOrganization]
+    address_type: List[t.AddressType]
+    email_type: List[t.EmailType]
+    phone_type: List[t.PhoneType]
 
 
 class OrganizationDataJavaScriptType(TypedDict):
@@ -72,19 +69,19 @@ class OrganizationPhoneDataJavaScriptType(TypedDict):
     whatsapp: str
 
 
-def process_organization_data(data: OrganizationDataJavaScriptType) -> OrganizationDataType:
+def process_organization_data(data: OrganizationDataJavaScriptType) -> t.Organization:
     pass
 
 
-def process_address_data(data: List[OrganizationAddressDataJavaScriptType]) -> List[OrganizationAddressDataType]:
+def process_address_data(data: List[OrganizationAddressDataJavaScriptType]) -> List[t.OrganizationAddress]:
     pass
 
 
-def process_email_data(data: List[OrganizationEmailDataJavaScriptType]) -> List[OrganizationEmailDataType]:
+def process_email_data(data: List[OrganizationEmailDataJavaScriptType]) -> List[t.OrganizationEmail]:
     pass
 
 
-def process_phone_data(data: List[OrganizationPhoneDataJavaScriptType]) -> List[OrganizationPhoneDataType]:
+def process_phone_data(data: List[OrganizationPhoneDataJavaScriptType]) -> List[t.OrganizationPhone]:
     pass
 
 
@@ -106,20 +103,20 @@ class OrganizationView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            organization_stmt: Select = query_organization.where(Organization.id == pk)
+            organization_stmt: Select = query_organization.where(m.Organization.id == pk)
             organization_result: Result = await session.execute(organization_stmt)
             organization: Row = organization_result.first()
 
-            address_stmt: Select = query_organization_address.where(Address.organization_id == pk)
+            address_stmt: Select = query_organization_address.where(m.Address.organization_id == pk)
             address_result: Result = await session.execute(address_stmt)
 
-            email_stmt: Select = query_organization_email.where(Email.organization_id == pk)
+            email_stmt: Select = query_organization_email.where(m.Email.organization_id == pk)
             email_result: Result = await session.execute(email_stmt)
 
-            phone_stmt: Select = query_organization_phone.where(Phone.organization_id == pk)
+            phone_stmt: Select = query_organization_phone.where(m.Phone.organization_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
-            membership_stmt: Select = query_organization_membership.where(Membership.organization_id == pk)
+            membership_stmt: Select = query_organization_membership.where(m.Membership.organization_id == pk)
             membership_result: Result = await session.execute(membership_stmt)
 
             parent_organizations: Result = await session.execute(query_parent_organizations)
@@ -166,39 +163,39 @@ class OrganizationView(HTTPMethodView):
         session: AsyncSession = request.ctx.session
         payload: OrganizationResultType = request.json
         async with session.begin():
-            organization_stmt: Update = update(Organization).where(Organization.id == pk).values(
+            organization_stmt: Update = update(m.Organization).where(m.Organization.id == pk).values(
                 **payload['organization']
             )
             await session.execute(organization_stmt)
 
             for item in payload['address']:
-                address_stmt: Update = update(Address).where(Address.id == pk).values(**item)
+                address_stmt: Update = update(m.Address).where(m.Address.id == pk).values(**item)
                 await session.execute(address_stmt)
             for item in payload['email']:
-                email_stmt: Update = update(Email).where(Email.id == pk).values(**item)
+                email_stmt: Update = update(m.Email).where(m.Email.id == pk).values(**item)
                 await session.execute(email_stmt)
             for item in payload['phone']:
-                phone_stmt: Update = update(Phone).where(Phone.id == pk).values(**item)
+                phone_stmt: Update = update(m.Phone).where(m.Phone.id == pk).values(**item)
                 await session.execute(phone_stmt)
             for item in payload['membership']:
-                membership_stmt: Update = update(Membership).where(Membership.id == pk).values(**item)
+                membership_stmt: Update = update(m.Membership).where(m.Membership.id == pk).values(**item)
                 await session.execute(membership_stmt)
 
         async with session.begin():
-            organization_stmt: Select = query_organization.where(Organization.id == pk)
+            organization_stmt: Select = query_organization.where(m.Organization.id == pk)
             organization_result: Result = await session.execute(organization_stmt)
             organization: Row = organization_result.first()
 
-            address_stmt: Select = query_organization_address.where(Address.organization_id == pk)
+            address_stmt: Select = query_organization_address.where(m.Address.organization_id == pk)
             address_result: Result = await session.execute(address_stmt)
 
-            email_stmt: Select = query_organization_email.where(Email.organization_id == pk)
+            email_stmt: Select = query_organization_email.where(m.Email.organization_id == pk)
             email_result: Result = await session.execute(email_stmt)
 
-            phone_stmt: Select = query_organization_phone.where(Phone.organization_id == pk)
+            phone_stmt: Select = query_organization_phone.where(m.Phone.organization_id == pk)
             phone_result: Result = await session.execute(phone_stmt)
 
-            membership_stmt: Select = query_organization_membership.where(Membership.organization_id == pk)
+            membership_stmt: Select = query_organization_membership.where(m.Membership.organization_id == pk)
             membership_result: Result = await session.execute(membership_stmt)
 
             parent_organizations: Result = await session.execute(query_parent_organizations)
@@ -270,7 +267,7 @@ class OrganizationsView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            organization: Organization = Organization(**request.json)
+            organization: m.Organization = m.Organization(**request.json)
             session.add_all([organization])
         json_data: Dict[str, Any] = organization.to_dict()
         return json(json_data, default=str)

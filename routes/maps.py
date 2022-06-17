@@ -1,8 +1,7 @@
+import data_types.data_types as t
 import datetime
+import models.models as m
 import uuid
-from data_types.data_types import GenderTypeType, MembershipFeeCategoryType, AddressTypeType, EmailTypeType, \
-    PhoneTypeType, ParentOrganizationsType
-from models.models import AddressType, EmailType, Gender, MembershipFeeCategory, PhoneType
 from queries.queries import query_gender, query_membership_fee_category, query_address_type, query_email_type, \
     query_phone_type, query_parent_organizations
 from sanic import Blueprint
@@ -37,18 +36,18 @@ class MapPythonType(TypedDict):
 
 
 class PersonMappingType(TypedDict):
-    gender_type: List[GenderTypeType]
-    membership_fee_type: List[MembershipFeeCategoryType]
-    address_type: List[AddressTypeType]
-    email_type: List[EmailTypeType]
-    phone_type: List[PhoneTypeType]
+    gender_type: List[t.GenderType]
+    membership_fee_type: List[t.MembershipFeeCategory]
+    address_type: List[t.AddressType]
+    email_type: List[t.EmailType]
+    phone_type: List[t.PhoneType]
 
 
 class OrganizationMappingType(TypedDict):
-    parent_organizations: List[ParentOrganizationsType]
-    address_type: List[AddressTypeType]
-    email_type: List[EmailTypeType]
-    phone_type: List[PhoneTypeType]
+    parent_organizations: List[t.ParentOrganization]
+    address_type: List[t.AddressType]
+    email_type: List[t.EmailType]
+    phone_type: List[t.PhoneType]
 
 
 def process_map_item(map_item: MapJavaScriptType) -> MapPythonType:
@@ -60,7 +59,7 @@ def process_map_item(map_item: MapJavaScriptType) -> MapPythonType:
 
 
 class GenderView(HTTPMethodView):
-    DBObject: Gender = Gender
+    DBObject: m.Gender = m.Gender
 
     async def get(self, request: Request, pk: str) -> HTTPResponse:
         """
@@ -102,7 +101,7 @@ class GenderView(HTTPMethodView):
 
 
 class GendersView(HTTPMethodView):
-    DBObject: Gender = Gender
+    DBObject: m.Gender = m.Gender
 
     async def get(self, request: Request) -> HTTPResponse:
         """
@@ -144,7 +143,7 @@ class GendersView(HTTPMethodView):
 
 
 class MembershipFeeCategoryView(GenderView):
-    DBObject: MembershipFeeCategory = MembershipFeeCategory
+    DBObject: m.MembershipFeeCategory = m.MembershipFeeCategory
 
     async def get(self, request: Request, pk: str) -> HTTPResponse:
         """
@@ -168,7 +167,7 @@ class MembershipFeeCategoryView(GenderView):
 
 
 class MembershipFeeCategoriesView(GendersView):
-    DBObject: MembershipFeeCategory = MembershipFeeCategory
+    DBObject: m.MembershipFeeCategory = m.MembershipFeeCategory
 
     async def get(self, request: Request) -> HTTPResponse:
         """
@@ -190,7 +189,7 @@ class MembershipFeeCategoriesView(GendersView):
 
 
 class AddressTypeView(GenderView):
-    DBObject: AddressType = AddressType
+    DBObject: m.AddressType = m.AddressType
 
     async def get(self, request: Request, pk: str) -> HTTPResponse:
         """
@@ -214,7 +213,7 @@ class AddressTypeView(GenderView):
 
 
 class AddressTypesView(GendersView):
-    DBObject: AddressType = AddressType
+    DBObject: m.AddressType = m.AddressType
 
     async def get(self, request: Request) -> HTTPResponse:
         """
@@ -236,7 +235,7 @@ class AddressTypesView(GendersView):
 
 
 class PhoneTypeView(GenderView):
-    DBObject: PhoneType = PhoneType
+    DBObject: m.PhoneType = m.PhoneType
 
     async def get(self, request: Request, pk: str) -> HTTPResponse:
         """
@@ -260,7 +259,7 @@ class PhoneTypeView(GenderView):
 
 
 class PhoneTypesView(GendersView):
-    DBObject: PhoneType = PhoneType
+    DBObject: m.PhoneType = m.PhoneType
 
     async def get(self, request: Request) -> HTTPResponse:
         """
@@ -282,7 +281,7 @@ class PhoneTypesView(GendersView):
 
 
 class EmailTypeView(GenderView):
-    DBObject: EmailType = EmailType
+    DBObject: m.EmailType = m.EmailType
 
     async def get(self, request: Request, pk: str) -> HTTPResponse:
         """
@@ -306,7 +305,7 @@ class EmailTypeView(GenderView):
 
 
 class EmailTypesView(GendersView):
-    DBObject: EmailType = EmailType
+    DBObject: m.EmailType = m.EmailType
 
     async def get(self, request: Request) -> HTTPResponse:
         """
