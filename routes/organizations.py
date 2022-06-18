@@ -15,79 +15,23 @@ from sqlalchemy.engine import Result, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import Any, Dict, List, TypedDict, Optional
+from typing import Any, Dict, List
 
 
-class OrganizationResultType(TypedDict):
-    organization: t.Organization
-    address: List[t.OrganizationAddress]
-    email: List[t.OrganizationEmail]
-    phone: List[t.OrganizationPhone]
-    membership: List[t.OrganizationMembership]
-    parent_organizations: List[t.ParentOrganization]
-    address_type: List[t.AddressType]
-    email_type: List[t.EmailType]
-    phone_type: List[t.PhoneType]
-
-
-class OrganizationDataJavaScriptType(TypedDict):
-    organization_name: str
-    parent_organization_id: str
-    parent_organization_name: str
-    description: Optional[str]
-    accepts_members_flag: str
-    establishment_date: str
-    termination_date: Optional[str]
-    notes: Optional[str]
-
-
-class OrganizationAddressDataJavaScriptType(TypedDict):
-    address_type_id: str
-    address_type_name: str
-    zip: str
-    city: str
-    address_1: str
-    address_2: Optional[str]
-
-
-class OrganizationEmailDataJavaScriptType(TypedDict):
-    email_type_id: str
-    email_type_name: str
-    email: str
-    messenger: str
-    skype: str
-
-
-class OrganizationPhoneDataJavaScriptType(TypedDict):
-    phone_type_id: str
-    phone_type_name: str
-    phone: str
-    phone_extension: Optional[str]
-    messenger: str
-    skype: str
-    viber: str
-    whatsapp: str
-
-
-def process_organization_data(data: OrganizationDataJavaScriptType) -> t.Organization:
+def process_organization_data(data: t.OrganizationJS) -> t.Organization:
     pass
 
 
-def process_address_data(data: List[OrganizationAddressDataJavaScriptType]) -> List[t.OrganizationAddress]:
+def process_address_data(data: List[t.OrganizationAddressJS]) -> List[t.OrganizationAddress]:
     pass
 
 
-def process_email_data(data: List[OrganizationEmailDataJavaScriptType]) -> List[t.OrganizationEmail]:
+def process_email_data(data: List[t.OrganizationEmailJS]) -> List[t.OrganizationEmail]:
     pass
 
 
-def process_phone_data(data: List[OrganizationPhoneDataJavaScriptType]) -> List[t.OrganizationPhone]:
+def process_phone_data(data: List[t.OrganizationPhoneJS]) -> List[t.OrganizationPhone]:
     pass
-
-
-# TODO: make type names shorter and move them to data types module
-# TODO: check optional settings
-# TODO: cross-check types with TypeScript types
 
 
 class OrganizationView(HTTPMethodView):
@@ -137,7 +81,7 @@ class OrganizationView(HTTPMethodView):
                 "phone_type": list(),
             })
 
-        result_dict: OrganizationResultType = {
+        result_dict: t.OrganizationResult = {
             "organization": dict(organization),
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),
@@ -161,7 +105,7 @@ class OrganizationView(HTTPMethodView):
         :return: JSON object with results
         """
         session: AsyncSession = request.ctx.session
-        payload: OrganizationResultType = request.json
+        payload: t.OrganizationResult = request.json
         async with session.begin():
             organization_stmt: Update = update(m.Organization).where(m.Organization.id == pk).values(
                 **payload['organization']
@@ -216,7 +160,7 @@ class OrganizationView(HTTPMethodView):
                 "phone_type": list(),
             })
 
-        result_dict: OrganizationResultType = {
+        result_dict: t.OrganizationResult = {
             "organization": dict(organization),
             "address": list(map(dict, address_result)),
             "email": list(map(dict, email_result)),

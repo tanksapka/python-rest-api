@@ -14,43 +14,10 @@ from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql.dml import Update
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List
 
 
-class MapJavaScriptType(TypedDict):
-    id: Optional[str]
-    created_on: str
-    created_by: str
-    name: str
-    description: Optional[str]
-    valid_flag: str
-
-
-class MapPythonType(TypedDict):
-    id: str
-    created_on: datetime.datetime
-    created_by: str
-    name: str
-    description: str
-    valid_flag: str
-
-
-class PersonMappingType(TypedDict):
-    gender_type: List[t.GenderType]
-    membership_fee_type: List[t.MembershipFeeCategory]
-    address_type: List[t.AddressType]
-    email_type: List[t.EmailType]
-    phone_type: List[t.PhoneType]
-
-
-class OrganizationMappingType(TypedDict):
-    parent_organizations: List[t.ParentOrganization]
-    address_type: List[t.AddressType]
-    email_type: List[t.EmailType]
-    phone_type: List[t.PhoneType]
-
-
-def process_map_item(map_item: MapJavaScriptType) -> MapPythonType:
+def process_map_item(map_item: t.MapJS) -> t.MapPython:
     map_item.setdefault('id', str(uuid.uuid1()))
     return {
         k: v if k != 'created_on' else datetime.datetime.strptime(v, '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -129,7 +96,7 @@ class GendersView(HTTPMethodView):
         :return: JSON with id and timestamp
         """
         session: AsyncSession = request.ctx.session
-        items: List[MapPythonType] = [process_map_item(row) for row in request.json.get('data', [])]
+        items: List[t.MapPython] = [process_map_item(row) for row in request.json.get('data', [])]
         async with session.begin():
             for item in items:
                 upsert_stmt: Insert = insert(self.DBObject).values(item).on_conflict_do_update(
@@ -344,7 +311,7 @@ class PersonMappingsView(HTTPMethodView):
             email_type_result: Result = await session.execute(query_email_type)
             phone_type_result: Result = await session.execute(query_phone_type)
 
-        result_dict: PersonMappingType = {
+        result_dict: t.PersonMapping = {
             "gender_type": list(map(dict, gender_type_result)),
             "membership_fee_type": list(map(dict, membership_fee_type_result)),
             "address_type": list(map(dict, address_type_result)),
@@ -372,7 +339,7 @@ class OrganizationMappingsView(HTTPMethodView):
             email_type_result: Result = await session.execute(query_email_type)
             phone_type_result: Result = await session.execute(query_phone_type)
 
-        result_dict: OrganizationMappingType = {
+        result_dict: t.OrganizationMapping = {
             "parent_organizations": list(map(dict, parent_organizations)),
             "address_type": list(map(dict, address_type_result)),
             "email_type": list(map(dict, email_type_result)),

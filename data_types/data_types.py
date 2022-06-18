@@ -29,6 +29,20 @@ class Organization(TypedDict):
     notes: str
 
 
+class OrganizationJS(TypedDict):
+    """
+    Incoming data type from frontend.
+    """
+    organization_name: str
+    parent_organization_id: str
+    parent_organization_name: str
+    description: Optional[str]
+    accepts_members_flag: str
+    establishment_date: str
+    termination_date: Optional[str]
+    notes: Optional[str]
+
+
 class PersonAddress(TypedDict):
     id: str
     person_id: str
@@ -43,6 +57,18 @@ class OrganizationAddress(TypedDict):
     id: str
     organization_id: str
     address_type_id: str
+    zip: str
+    city: str
+    address_1: str
+    address_2: Optional[str]
+
+
+class OrganizationAddressJS(TypedDict):
+    """
+    Incoming data type from frontend.
+    """
+    address_type_id: str
+    address_type_name: str
     zip: str
     city: str
     address_1: str
@@ -67,6 +93,17 @@ class OrganizationEmail(TypedDict):
     skype: str
 
 
+class OrganizationEmailJS(TypedDict):
+    """
+    Incoming data type from frontend.
+    """
+    email_type_id: str
+    email_type_name: str
+    email: str
+    messenger: str
+    skype: str
+
+
 class PersonPhone(TypedDict):
     id: str
     person_id: str
@@ -83,6 +120,20 @@ class OrganizationPhone(TypedDict):
     id: str
     organization_id: str
     phone_type_id: str
+    phone: str
+    phone_extension: Optional[str]
+    messenger: str
+    skype: str
+    viber: str
+    whatsapp: str
+
+
+class OrganizationPhoneJS(TypedDict):
+    """
+    Incoming data type from frontend.
+    """
+    phone_type_id: str
+    phone_type_name: str
     phone: str
     phone_extension: Optional[str]
     messenger: str
@@ -138,9 +189,54 @@ class PhoneType(TypedDict):
     label: str
 
 
+class MapJS(TypedDict):
+    """
+    Incoming data type from frontend.
+    """
+    id: Optional[str]
+    created_on: str
+    created_by: str
+    name: str
+    description: Optional[str]
+    valid_flag: str
+
+
+class MapPython(TypedDict):
+    """
+    Native data to be sent to frontend.
+    """
+    id: str
+    created_on: datetime.datetime
+    created_by: str
+    name: str
+    description: str
+    valid_flag: str
+
+
 class ParentOrganization(TypedDict):
     organization_id: str
     organization_name: str
+
+
+class PersonMapping(TypedDict):
+    """
+    Person related mapping types. Primary usage for new Person addition.
+    """
+    gender_type: List[GenderType]
+    membership_fee_type: List[MembershipFeeCategory]
+    address_type: List[AddressType]
+    email_type: List[EmailType]
+    phone_type: List[PhoneType]
+
+
+class OrganizationMapping(TypedDict):
+    """
+    Organization related mapping types. Primary usage for new Organization addition.
+    """
+    parent_organizations: List[ParentOrganization]
+    address_type: List[AddressType]
+    email_type: List[EmailType]
+    phone_type: List[PhoneType]
 
 
 class PersonResult(TypedDict):
@@ -151,6 +247,18 @@ class PersonResult(TypedDict):
     membership: List[PersonMembership]
     gender_type: List[GenderType]
     membership_fee_type: List[MembershipFeeCategory]
+    address_type: List[AddressType]
+    email_type: List[EmailType]
+    phone_type: List[PhoneType]
+
+
+class OrganizationResult(TypedDict):
+    organization: Organization
+    address: List[OrganizationAddress]
+    email: List[OrganizationEmail]
+    phone: List[OrganizationPhone]
+    membership: List[OrganizationMembership]
+    parent_organizations: List[ParentOrganization]
     address_type: List[AddressType]
     email_type: List[EmailType]
     phone_type: List[PhoneType]
