@@ -1,9 +1,8 @@
 import data_types.data_types as t
 import datetime
 import models.models as m
+import queries.queries as q
 import uuid
-from queries.queries import query_gender, query_membership_fee_category, query_address_type, query_email_type, \
-    query_phone_type, query_parent_organizations
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, HTTPResponse
@@ -305,11 +304,11 @@ class PersonMappingsView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            gender_type_result: Result = await session.execute(query_gender)
-            membership_fee_type_result: Result = await session.execute(query_membership_fee_category)
-            address_type_result: Result = await session.execute(query_address_type)
-            email_type_result: Result = await session.execute(query_email_type)
-            phone_type_result: Result = await session.execute(query_phone_type)
+            gender_type_result: Result = await session.execute(q.query_gender)
+            membership_fee_type_result: Result = await session.execute(q.query_membership_fee_category)
+            address_type_result: Result = await session.execute(q.query_address_type)
+            email_type_result: Result = await session.execute(q.query_email_type)
+            phone_type_result: Result = await session.execute(q.query_phone_type)
 
         result_dict: t.PersonMapping = {
             "gender_type": list(map(dict, gender_type_result)),
@@ -334,13 +333,42 @@ class OrganizationMappingsView(HTTPMethodView):
         """
         session: AsyncSession = request.ctx.session
         async with session.begin():
-            parent_organizations: Result = await session.execute(query_parent_organizations)
-            address_type_result: Result = await session.execute(query_address_type)
-            email_type_result: Result = await session.execute(query_email_type)
-            phone_type_result: Result = await session.execute(query_phone_type)
+            parent_organizations: Result = await session.execute(q.query_parent_organizations)
+            address_type_result: Result = await session.execute(q.query_address_type)
+            email_type_result: Result = await session.execute(q.query_email_type)
+            phone_type_result: Result = await session.execute(q.query_phone_type)
 
         result_dict: t.OrganizationMapping = {
             "parent_organizations": list(map(dict, parent_organizations)),
+            "address_type": list(map(dict, address_type_result)),
+            "email_type": list(map(dict, email_type_result)),
+            "phone_type": list(map(dict, phone_type_result)),
+        }
+
+        return json(result_dict, default=str)
+
+
+class MappingsView(HTTPMethodView):
+
+    @staticmethod
+    async def get(request: Request) -> HTTPResponse:
+        """
+        Gets all mapping data.
+
+        :param request: `Request` object
+        :return: JSON object with results
+        """
+        session: AsyncSession = request.ctx.session
+        async with session.begin():
+            gender_type_result = await session.execute(q.query_gender_map)
+            membership_fee_type_result: Result = await session.execute(q.query_membership_fee_category_map)
+            address_type_result: Result = await session.execute(q.query_address_type_map)
+            email_type_result: Result = await session.execute(q.query_email_type_map)
+            phone_type_result: Result = await session.execute(q.query_phone_type_map)
+
+        result_dict: t.Mapping = {
+            "gender_type": list(map(dict, gender_type_result)),
+            "membership_fee_type": list(map(dict, membership_fee_type_result)),
             "address_type": list(map(dict, address_type_result)),
             "email_type": list(map(dict, email_type_result)),
             "phone_type": list(map(dict, phone_type_result)),
@@ -374,3 +402,6 @@ bp_person_mapping.add_route(PersonMappingsView.as_view(), "/")
 
 bp_organization_mapping = Blueprint("organization_mappings", url_prefix="/organization-mappings/")
 bp_organization_mapping.add_route(OrganizationMappingsView.as_view(), "/")
+
+bp_mapping = Blueprint("mappings", url_prefix="/mappings/")
+bp_mapping.add_route(MappingsView.as_view(), "/")

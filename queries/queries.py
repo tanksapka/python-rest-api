@@ -136,22 +136,67 @@ query_gender: Select = select(
     Gender.name.label('label'),
 ).where(Gender.valid_flag == 'Y')
 
+query_gender_map: Select = select(
+    Gender.id,
+    Gender.name,
+    Gender.description,
+    Gender.valid_flag,
+    Gender.created_on,
+    Gender.created_by,
+)
+
 query_membership_fee_category: Select = select(
     MembershipFeeCategory.id.label('value'),
     MembershipFeeCategory.name.label('label'),
 ).where(MembershipFeeCategory.valid_flag == 'Y')
+
+query_membership_fee_category_map: Select = select(
+    MembershipFeeCategory.id,
+    MembershipFeeCategory.name,
+    MembershipFeeCategory.description,
+    MembershipFeeCategory.valid_flag,
+    MembershipFeeCategory.created_on,
+    MembershipFeeCategory.created_by,
+)
 
 query_address_type: Select = select(
     AddressType.id.label('value'),
     AddressType.name.label('label'),
 ).where(AddressType.valid_flag == 'Y')
 
+query_address_type_map: Select = select(
+    AddressType.id,
+    AddressType.name,
+    AddressType.description,
+    AddressType.valid_flag,
+    AddressType.created_on,
+    AddressType.created_by,
+)
+
 query_email_type: Select = select(
     EmailType.id.label('value'),
     EmailType.name.label('label'),
 ).where(EmailType.valid_flag == 'Y')
 
+query_email_type_map: Select = select(
+    EmailType.id,
+    EmailType.name,
+    EmailType.description,
+    EmailType.valid_flag,
+    EmailType.created_on,
+    EmailType.created_by,
+)
+
 query_phone_type: Select = select(
     PhoneType.id.label('value'),
     PhoneType.name.label('label'),
 ).where(PhoneType.valid_flag == 'Y')
+
+query_phone_type_map: Select = select(
+    PhoneType.id,
+    PhoneType.name,
+    PhoneType.description,
+    PhoneType.valid_flag,
+    PhoneType.created_on,
+    PhoneType.created_by,
+)

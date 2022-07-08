@@ -239,6 +239,17 @@ class OrganizationMapping(TypedDict):
     phone_type: List[PhoneType]
 
 
+class Mapping(TypedDict):
+    """
+    Mapping types available for the whole app.
+    """
+    gender_type: List[MapPython]
+    membership_fee_type: List[MapPython]
+    address_type: List[MapPython]
+    email_type: List[MapPython]
+    phone_type: List[MapPython]
+
+
 class PersonResult(TypedDict):
     person: Person
     address: List[PersonAddress]
