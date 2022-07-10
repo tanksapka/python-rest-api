@@ -92,7 +92,7 @@ class GendersView(HTTPMethodView):
         Inserts the provided JSON payload to corresponding table.
 
         :param request: `Request` object
-        :return: JSON with id and timestamp
+        :return: JSON with updated mapping results
         """
         session: AsyncSession = request.ctx.session
         items: List[t.MapPython] = [process_map_item(row) for row in request.json.get('data', [])]
@@ -101,11 +101,11 @@ class GendersView(HTTPMethodView):
                 upsert_stmt: Insert = insert(self.DBObject).values(item).on_conflict_do_update(
                     index_elements=['id'], set_=item
                 )
-                # print(upsert_stmt, type(upsert_stmt), item, sep='\n')
-                result = await session.execute(upsert_stmt)
-                # print(result)
-        # print(items)
-        return json(items, default=str)
+                await session.execute(upsert_stmt)
+            stmt: Select = select(self.DBObject)
+            results: Result = await session.execute(stmt)
+            genders: List[GenderView.DBObject] = results.scalars().fetchall()
+        return json([row.to_dict() for row in genders], default=str)
 
 
 class MembershipFeeCategoryView(GenderView):
