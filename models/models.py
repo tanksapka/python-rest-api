@@ -67,8 +67,8 @@ class Organization(BaseModel):
     organization_parent_id = Column(
         NCHAR(36), ForeignKey('organization.id', name='fk_organization_organization_id'), nullable=True
     )
-    name = Column(NVARCHAR(255), nullable=False)
-    description = Column(NVARCHAR(255), unique=True, nullable=True)
+    name = Column(NVARCHAR(255), unique=True, nullable=False)
+    description = Column(NVARCHAR(255), nullable=True)
     accepts_members_flag = Column(
         NCHAR(1), CheckConstraint("accepts_members_flag in ('Y', 'N')", name='chk_accepts_members_flag'),
         nullable=False
